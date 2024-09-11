@@ -31,8 +31,9 @@ import dev.ikm.tinkar.coordinate.view.calculator.ViewCalculator;
 import dev.ikm.tinkar.entity.ConceptEntity;
 import dev.ikm.tinkar.entity.Entity;
 import dev.ikm.tinkar.entity.EntityService;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -154,17 +155,41 @@ public class PatternFieldsController {
             }
         });
         loadDataTypeComboBox();
-        loadFieldOrderComboBox();
-        ObjectProperty<Integer> fieldOrders = patternFieldsViewModel.getProperty(TOTAL_EXISTING_FIELDS);
-        ObjectProperty<Integer> fieldOrderProp = patternFieldsViewModel.getProperty(FIELD_ORDER);
-        SimpleStringProperty displayNameProp = patternFieldsViewModel.getProperty(DISPLAY_NAME);
+//        loadFieldOrderComboBox();
+        IntegerProperty totalExistingfields = patternFieldsViewModel.getProperty(TOTAL_EXISTING_FIELDS);
+        IntegerProperty fieldOrderProp = patternFieldsViewModel.getProperty(FIELD_ORDER);
+        StringProperty displayNameProp = patternFieldsViewModel.getProperty(DISPLAY_NAME);
         ObjectProperty<ConceptEntity> dataTypeProp = patternFieldsViewModel.getProperty(DATA_TYPE);
         ObjectProperty<ConceptEntity> purposeProp = patternFieldsViewModel.getProperty(PURPOSE_ENTITY);
         ObjectProperty<ConceptEntity> meaningProp = patternFieldsViewModel.getProperty(MEANING_ENTITY);
+        ObservableList<Integer> fieldOrderOptions = patternFieldsViewModel.getProperty(FIELD_ORDER_OPTIONS);
 
-        fieldOrderComboBox.valueProperty().bindBidirectional(fieldOrderProp);
+        fieldOrderComboBox.valueProperty().bindBidirectional(fieldOrderProp.asObject());
         displayNameTextField.textProperty().bindBidirectional(displayNameProp);
         dataTypeComboBox.valueProperty().bindBidirectional(dataTypeProp);
+
+        fieldOrderComboBox.setItems(fieldOrderOptions);
+
+        totalExistingfields.addListener((obs, oldVal, newVal) ->{
+            System.out.println(" listner " + newVal);
+            if(fieldOrderOptions !=null){
+                int totalFields = newVal.intValue();
+                int optionsSize = fieldOrderOptions.size();
+                int diff = totalFields - optionsSize;
+                if(diff < 0){
+                    fieldOrderOptions.remove(newVal.intValue(), fieldOrderOptions.size()-1);
+                }else if( diff > 0){
+                    for(int i = optionsSize; i <= totalFields ; i++){
+                        fieldOrderOptions.add(optionsSize);
+                    }
+                }else {
+                    int optionValue = newVal.intValue()+1;
+                    fieldOrderOptions.add(optionValue);
+                }
+            }else{
+                loadFieldOrderComboBox();
+            }
+        });
 
         fieldOrderProp.addListener(fieldsValidationListener);
         displayNameProp.addListener(fieldsValidationListener);
@@ -176,7 +201,6 @@ public class PatternFieldsController {
     private void loadFieldOrderComboBox() {
         //remove the items from combobox list.
         fieldOrderComboBox.getItems().clear();
-
         //Create Interger observable List.
         ObservableList<Integer> fieldOrdersList = FXCollections.observableArrayList();
         // Get existing total number of fields.
@@ -187,9 +211,12 @@ public class PatternFieldsController {
         for(int i=1; i <= maxFieldOrders; i++ ){
             fieldOrdersList.add(i);
         }
+        //set items in combox.
         fieldOrderComboBox.setItems(fieldOrdersList);
-
-        /*fieldOrderComboBox.setConverter((new StringConverter<Integer>() {
+        fieldOrderComboBox.getSelectionModel().selectLast();
+        // set converter logic
+        // Question for Carl: Can we use InterStringConverter instead.
+       /* fieldOrderComboBox.setConverter((new StringConverter<Integer>() {
             @Override
             public String toString(Integer fieldNumber) {
                 return String.valueOf(fieldNumber);
@@ -197,12 +224,9 @@ public class PatternFieldsController {
 
             @Override
             public Integer fromString(String s) {
-                return null;
+                return Integer.getInteger(s);
             }
-        }));
-
-        //Select 1st one by default This is temp code can be removed
-        fieldOrderComboBox.getSelectionModel().selectFirst();*/
+        }));*/
     }
 
     ViewProperties viewProperties;
@@ -521,5 +545,15 @@ public class PatternFieldsController {
         EvtBusFactory.getDefaultEvtBus().publish(patternFieldsViewModel.getPropertyValue(PATTERN_TOPIC),
                 new PatternFieldsPanelEvent(actionEvent.getSource(), PATTERN_FIELDS, patternField));
         clearView(actionEvent);
+    }
+
+    public void updateViewModel(Consumer<PatternFieldsViewModel> viewModelConsumer) {
+        if (viewModelConsumer != null) {
+            viewModelConsumer.accept(getViewModel());
+        }
+    }
+
+    public PatternFieldsViewModel getViewModel(){
+        return patternFieldsViewModel;
     }
 }
