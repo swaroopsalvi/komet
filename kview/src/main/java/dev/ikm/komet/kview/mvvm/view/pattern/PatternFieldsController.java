@@ -35,7 +35,6 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -155,24 +154,26 @@ public class PatternFieldsController {
             }
         });
         loadDataTypeComboBox();
-//        loadFieldOrderComboBox();
         IntegerProperty totalExistingfields = patternFieldsViewModel.getProperty(TOTAL_EXISTING_FIELDS);
         IntegerProperty fieldOrderProp = patternFieldsViewModel.getProperty(FIELD_ORDER);
         StringProperty displayNameProp = patternFieldsViewModel.getProperty(DISPLAY_NAME);
         ObjectProperty<ConceptEntity> dataTypeProp = patternFieldsViewModel.getProperty(DATA_TYPE);
         ObjectProperty<ConceptEntity> purposeProp = patternFieldsViewModel.getProperty(PURPOSE_ENTITY);
         ObjectProperty<ConceptEntity> meaningProp = patternFieldsViewModel.getProperty(MEANING_ENTITY);
-        ObservableList<Integer> fieldOrderOptions = patternFieldsViewModel.getProperty(FIELD_ORDER_OPTIONS);
+        ObservableList<Integer> fieldOrderOptions = patternFieldsViewModel.getObservableList(FIELD_ORDER_OPTIONS);
 
         fieldOrderComboBox.valueProperty().bindBidirectional(fieldOrderProp.asObject());
         displayNameTextField.textProperty().bindBidirectional(displayNameProp);
         dataTypeComboBox.valueProperty().bindBidirectional(dataTypeProp);
 
+        fieldOrderProp.addListener(fieldsValidationListener);
+        displayNameProp.addListener(fieldsValidationListener);
+        dataTypeProp.addListener(fieldsValidationListener);
+        purposeProp.addListener(fieldsValidationListener);
+        meaningProp.addListener(fieldsValidationListener);
         fieldOrderComboBox.setItems(fieldOrderOptions);
 
         totalExistingfields.addListener((obs, oldVal, newVal) ->{
-            System.out.println(" listner " + newVal);
-            if(fieldOrderOptions !=null){
                 int totalFields = newVal.intValue();
                 int optionsSize = fieldOrderOptions.size();
                 int diff = totalFields - optionsSize;
@@ -180,53 +181,16 @@ public class PatternFieldsController {
                     fieldOrderOptions.remove(newVal.intValue(), fieldOrderOptions.size()-1);
                 }else if( diff > 0){
                     for(int i = optionsSize; i <= totalFields ; i++){
-                        fieldOrderOptions.add(optionsSize);
+                        fieldOrderOptions.add(i+1);
                     }
                 }else {
-                    int optionValue = newVal.intValue()+1;
+                    int optionValue = totalFields+1;
                     fieldOrderOptions.add(optionValue);
                 }
-            }else{
-                loadFieldOrderComboBox();
-            }
+            fieldOrderComboBox.getSelectionModel().selectLast();
         });
 
-        fieldOrderProp.addListener(fieldsValidationListener);
-        displayNameProp.addListener(fieldsValidationListener);
-        dataTypeProp.addListener(fieldsValidationListener);
-        purposeProp.addListener(fieldsValidationListener);
-        meaningProp.addListener(fieldsValidationListener);
-    }
 
-    private void loadFieldOrderComboBox() {
-        //remove the items from combobox list.
-        fieldOrderComboBox.getItems().clear();
-        //Create Interger observable List.
-        ObservableList<Integer> fieldOrdersList = FXCollections.observableArrayList();
-        // Get existing total number of fields.
-        ObjectProperty<Integer> fieldOrders = patternFieldsViewModel.getProperty(TOTAL_EXISTING_FIELDS);
-        // The max field orders to be displayed is totalFields+1.
-        int maxFieldOrders = fieldOrders.get()+1;
-        //Iterate to populate the fieldOrdersList with number of fieds to be displayed.
-        for(int i=1; i <= maxFieldOrders; i++ ){
-            fieldOrdersList.add(i);
-        }
-        //set items in combox.
-        fieldOrderComboBox.setItems(fieldOrdersList);
-        fieldOrderComboBox.getSelectionModel().selectLast();
-        // set converter logic
-        // Question for Carl: Can we use InterStringConverter instead.
-       /* fieldOrderComboBox.setConverter((new StringConverter<Integer>() {
-            @Override
-            public String toString(Integer fieldNumber) {
-                return String.valueOf(fieldNumber);
-            }
-
-            @Override
-            public Integer fromString(String s) {
-                return Integer.getInteger(s);
-            }
-        }));*/
     }
 
     ViewProperties viewProperties;
