@@ -15,14 +15,14 @@
  */
 package dev.ikm.komet.kview.mvvm.view.properties;
 
-import dev.ikm.komet.kview.mvvm.view.BasicController;
-import dev.ikm.komet.kview.events.ClosePropertiesPanelEvent;
-import dev.ikm.komet.kview.events.EditConceptEvent;
-import dev.ikm.komet.kview.mvvm.model.DescrName;
-import dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel;
 import dev.ikm.komet.framework.events.EvtBus;
 import dev.ikm.komet.framework.events.EvtBusFactory;
 import dev.ikm.komet.framework.view.ViewProperties;
+import dev.ikm.komet.kview.events.ClosePropertiesPanelEvent;
+import dev.ikm.komet.kview.events.ConceptCreateEditEvent;
+import dev.ikm.komet.kview.mvvm.model.DescrName;
+import dev.ikm.komet.kview.mvvm.view.BasicController;
+import dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel;
 import dev.ikm.tinkar.common.id.IntIdSet;
 import dev.ikm.tinkar.common.id.PublicId;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static dev.ikm.komet.kview.events.ConceptCreateEditEvent.ADD_CONCEPT_FQN;
 import static dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel.*;
 import static dev.ikm.tinkar.terms.TinkarTerm.DESCRIPTION_CASE_SIGNIFICANCE;
 import static dev.ikm.tinkar.terms.TinkarTerm.LANGUAGE_CONCEPT_NID_FOR_DESCRIPTION;
@@ -339,8 +340,8 @@ public class EditFullyQualifiedNameController implements BasicController {
         clearView();
 
         // publish the event of the updated FQN
-        eventBus.publish(conceptTopic, new EditConceptEvent(submitButton,
-                EditConceptEvent.EDIT_FQN, fqnDescrName));
+        eventBus.publish(conceptTopic, new ConceptCreateEditEvent(submitButton,
+                ADD_CONCEPT_FQN, fqnDescrName));
 
         // close the property bump out panel
         eventBus.publish(conceptTopic, new ClosePropertiesPanelEvent(submitButton,

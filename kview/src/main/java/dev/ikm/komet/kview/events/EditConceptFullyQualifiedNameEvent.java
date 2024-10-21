@@ -19,6 +19,9 @@ import dev.ikm.komet.framework.events.Evt;
 import dev.ikm.komet.framework.events.EvtType;
 import dev.ikm.tinkar.common.id.PublicId;
 
+/**
+ * This event class is not used anywhere anymore.
+ */
 public class EditConceptFullyQualifiedNameEvent extends Evt  {
 
     public static final EvtType<EditConceptFullyQualifiedNameEvent> EDIT_FQN = new EvtType<>(Evt.ANY, "EDIT_FQN");

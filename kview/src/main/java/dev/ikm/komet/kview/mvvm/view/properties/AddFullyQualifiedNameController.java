@@ -15,14 +15,14 @@
  */
 package dev.ikm.komet.kview.mvvm.view.properties;
 
-import dev.ikm.komet.kview.mvvm.view.AbstractBasicController;
-import dev.ikm.komet.kview.events.ClosePropertiesPanelEvent;
-import dev.ikm.komet.kview.events.CreateConceptEvent;
-import dev.ikm.komet.kview.mvvm.model.DescrName;
-import dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel;
 import dev.ikm.komet.framework.events.EvtBus;
 import dev.ikm.komet.framework.events.EvtBusFactory;
 import dev.ikm.komet.framework.view.ViewProperties;
+import dev.ikm.komet.kview.events.ClosePropertiesPanelEvent;
+import dev.ikm.komet.kview.events.ConceptCreateEditEvent;
+import dev.ikm.komet.kview.mvvm.model.DescrName;
+import dev.ikm.komet.kview.mvvm.view.AbstractBasicController;
+import dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel;
 import dev.ikm.tinkar.common.id.PublicId;
 import dev.ikm.tinkar.entity.ConceptEntity;
 import dev.ikm.tinkar.terms.TinkarTerm;
@@ -234,7 +234,7 @@ public class AddFullyQualifiedNameController extends AbstractBasicController {
         // event received in Details Controller that will call conceptViewModel.createConcept()
         //////////////////////////////////////////////////////////////////////////////////////////
         DescrName fqnDescrName = fqnViewModel.create();
-        eventBus.publish(conceptTopic, new CreateConceptEvent(this, CreateConceptEvent.ADD_FQN, fqnDescrName));
+        eventBus.publish(conceptTopic, new ConceptCreateEditEvent(this, ConceptCreateEditEvent.ADD_CONCEPT_FQN, fqnDescrName));
 
         // clear the form after saving.  otherwise when you navigate back to Add Other Name
         // you would have the previous form values still there

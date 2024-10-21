@@ -69,6 +69,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static dev.ikm.komet.framework.events.FrameworkTopics.RULES_TOPIC;
+import static dev.ikm.komet.kview.events.ConceptCreateEditEvent.*;
 import static dev.ikm.komet.kview.fxutils.MenuHelper.fireContextMenuEvent;
 import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.slideIn;
 import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.slideOut;
@@ -230,18 +231,9 @@ public class DetailsController  {
 
     private UUID conceptTopic;
 
-    private Subscriber<EditConceptFullyQualifiedNameEvent> fqnSubscriber;
-
-    private Subscriber<AddFullyQualifiedNameEvent> addFqnSubscriber;
-
-    private Subscriber<EditOtherNameConceptEvent> editOtherNameConceptEventSubscriber;
-    private Subscriber<EditConceptEvent> editConceptEventSubscriber;
-
-    private Subscriber<AddOtherNameToConceptEvent> addOtherNameToConceptEventSubscriber;
-
     private Subscriber<ClosePropertiesPanelEvent> closePropertiesPanelEventSubscriber;
 
-    private Subscriber<CreateConceptEvent> createConceptEventSubscriber;
+    private Subscriber<ConceptCreateEditEvent> conceptCreateEditEventSubscriber;
 
 
     private Subscriber<AxiomChangeEvent> changeSetTypeEventSubscriber;
@@ -317,34 +309,12 @@ public class DetailsController  {
         eventBus = EvtBusFactory.getDefaultEvtBus();
 
         // when the user clicks a fully qualified name, open the PropertiesPanel
-        fqnSubscriber = evt -> {
+        conceptCreateEditEventSubscriber = evt -> {
             if (!propertiesToggleButton.isSelected()) {
                 propertiesToggleButton.fire();
             }
         };
-        eventBus.subscribe(conceptTopic, EditConceptFullyQualifiedNameEvent.class, fqnSubscriber);
-
-        addFqnSubscriber = evt -> {
-            if (!propertiesToggleButton.isSelected()) {
-                propertiesToggleButton.fire();
-            }
-        };
-        eventBus.subscribe(conceptTopic, AddFullyQualifiedNameEvent.class, addFqnSubscriber);
-
-        // when the user clicks one of the other names, open the PropertiesPanel
-        editOtherNameConceptEventSubscriber = evt -> {
-            if (!propertiesToggleButton.isSelected()) {
-                propertiesToggleButton.fire();
-            }
-        };
-        eventBus.subscribe(conceptTopic, EditOtherNameConceptEvent.class, editOtherNameConceptEventSubscriber);
-
-        addOtherNameToConceptEventSubscriber = evt -> {
-            if (!propertiesToggleButton.isSelected()) {
-                propertiesToggleButton.fire();
-            }
-        };
-        eventBus.subscribe(conceptTopic, AddOtherNameToConceptEvent.class, addOtherNameToConceptEventSubscriber);
+        eventBus.subscribe(conceptTopic, ConceptCreateEditEvent.class, conceptCreateEditEventSubscriber);
 
         // if the user clicks the Close Properties Button from the Edit Descriptions panel
         // in that state, the properties bump out will be slid out, therefore firing will perform a slide in
@@ -364,8 +334,8 @@ public class DetailsController  {
 
         // Listens for events related to new fqn or other names added to this concept. Subscriber is responsible for
         // the final create concept transaction.
-        createConceptEventSubscriber = evt -> {
-            DescrName descrName = evt.getModel();
+        conceptCreateEditEventSubscriber = evt -> {
+            DescrName descrName = evt.getDescrName();
 
             if (getConceptViewModel() == null || descrName == null) {
                 LOG.warn("ViewModel should not be null. Event type:" + evt.getEventType());
@@ -373,9 +343,9 @@ public class DetailsController  {
             }
 
             if (CREATE.equals(conceptViewModel.getPropertyValue(MODE))) {
-                if (evt.getEventType() == CreateConceptEvent.ADD_FQN) {
+                if (evt.getEventType() == ADD_CONCEPT_FQN) {
                     getConceptViewModel().setPropertyValue(FULLY_QUALIFIED_NAME, descrName);
-                } else if (evt.getEventType() == CreateConceptEvent.ADD_OTHER_NAME) {
+                } else if (evt.getEventType() == ADD_CONCEPT_OTHER_NAME) {
                     getConceptViewModel().getObservableList(OTHER_NAMES).add(descrName);
                 }
                 // Attempts to write data
@@ -395,24 +365,7 @@ public class DetailsController  {
             }
 
         };
-        eventBus.subscribe(conceptTopic, CreateConceptEvent.class, createConceptEventSubscriber);
-
-        // set up the event handler for editing a concept
-        editConceptEventSubscriber = evt -> {
-            DescrName descrName = evt.getModel();
-
-            if (getConceptViewModel() == null || descrName == null) {
-                LOG.warn("ViewModel should not be null. Event type:" + evt.getEventType());
-                return;
-            }
-            if (EDIT.equals(conceptViewModel.getPropertyValue(MODE))) {
-                if (evt.getEventType() == EditConceptEvent.EDIT_FQN) {
-                    // the listener will fire on the FQN when we update this
-                    getConceptViewModel().setPropertyValue(FULLY_QUALIFIED_NAME, descrName);
-                }
-            }
-        };
-        eventBus.subscribe(conceptTopic, EditConceptEvent.class, editConceptEventSubscriber);
+        eventBus.subscribe(conceptTopic, ConceptCreateEditEvent.class, conceptCreateEditEventSubscriber);
 
 
         // listen to rules changes to update the axioms
@@ -464,14 +417,14 @@ public class DetailsController  {
                     {"ADD DESCRIPTION", true, new String[]{"menu-header-left-align"}, null, null},
                     {MenuHelper.SEPARATOR},
                     {"Add Fully Qualified Name", true, null, (EventHandler<ActionEvent>) actionEvent ->
-                            eventBus.publish(conceptTopic, new AddFullyQualifiedNameEvent(contextMenu,
-                                    AddFullyQualifiedNameEvent.ADD_FQN, getViewProperties())),
+                            eventBus.publish(conceptTopic, new ConceptCreateEditEvent(contextMenu,
+                                    ADD_CONCEPT_FQN, getViewProperties())),
                             createConceptEditDescrIcon()},
                     {"Add Other Name", true, null, (EventHandler<ActionEvent>) actionEvent -> {
-                        eventBus.publish(conceptTopic, new AddOtherNameToConceptEvent(contextMenu,
-                                AddOtherNameToConceptEvent.ADD_DESCRIPTION));
+                        eventBus.publish(conceptTopic, new ConceptCreateEditEvent(contextMenu,
+                                ADD_CONCEPT_OTHER_NAME, getViewProperties()));
                     },
-                            createConceptEditDescrIcon()},
+                           createConceptEditDescrIcon()},
                     {MenuHelper.SEPARATOR},
             };
         } else { // EDIT mode OR Create Mode after FQN has been added
@@ -479,22 +432,9 @@ public class DetailsController  {
                     {"ADD DESCRIPTION", true, new String[]{"menu-header-left-align"}, null, null},
                     {MenuHelper.SEPARATOR},
                     {"Add Other Name", true, null, (EventHandler<ActionEvent>) actionEvent -> {
-                        ConceptEntity currentConcept = null;
-                        if (getConceptViewModel().getPropertyValue(CURRENT_ENTITY) instanceof EntityProxy.Concept concept) {
-                            currentConcept = (ConceptEntity) EntityService.get().getEntity(concept.nid()).get();
-                        } else {
-                            currentConcept = getConceptViewModel().getPropertyValue(CURRENT_ENTITY);
-                        }
-                        if (currentConcept != null) {
-                            // in edit mode, will have a concept and public id
-                            eventBus.publish(conceptTopic, new AddOtherNameToConceptEvent(contextMenu,
-                                    // pass the publicId of the Concept
-                                    AddOtherNameToConceptEvent.ADD_DESCRIPTION, currentConcept.publicId())); // concept's publicId
-                        } else {
-                            // in create mode, we won't have a concept and public id yet
-                            eventBus.publish(conceptTopic, new AddOtherNameToConceptEvent(contextMenu,
-                                    AddOtherNameToConceptEvent.ADD_DESCRIPTION));
-                        }
+                        // in create mode, we won't have a concept and public id yet
+                        eventBus.publish(conceptTopic, new ConceptCreateEditEvent(contextMenu,
+                            ADD_CONCEPT_OTHER_NAME, getViewProperties()));
                     },
                             createConceptEditDescrIcon()},
                     {MenuHelper.SEPARATOR},
@@ -752,8 +692,8 @@ public class DetailsController  {
 
         latestFqnText.setOnMouseClicked(event -> {
             eventBus.publish(conceptTopic,
-                    new EditConceptFullyQualifiedNameEvent(latestFqnText,
-                            EditConceptFullyQualifiedNameEvent.EDIT_FQN, fqnPublicId));
+                    new ConceptCreateEditEvent(latestFqnText,
+                            ConceptCreateEditEvent.EDIT_CONCEPT_FQN, fqnDescrName));
         });
         // these should never be null, if the drop-downs are populated then the
         // submit button will not be enabled on the Add FQN form
@@ -774,8 +714,8 @@ public class DetailsController  {
             rows.forEach(textFlowPane -> {
                 textFlowPane.setOnMouseClicked(event -> {
                     eventBus.publish(conceptTopic,
-                            new EditOtherNameConceptEvent(textFlowPane,
-                                    EditOtherNameConceptEvent.EDIT_OTHER_NAME, otherName.getSemanticPublicId()));
+                            new ConceptCreateEditEvent(textFlowPane,
+                                    EDIT_CONCEPT_OTHER_NAME, otherName.getSemanticPublicId()));
                 });
             });
             otherNamesVBox.getChildren().addAll(rows);
@@ -820,8 +760,8 @@ public class DetailsController  {
                 rows.forEach(textFlowPane -> {
                     textFlowPane.setOnMouseClicked(event -> {
                         eventBus.publish(conceptTopic,
-                                new EditOtherNameConceptEvent(textFlowPane,
-                                        EditOtherNameConceptEvent.EDIT_OTHER_NAME, otherNamePublicId));
+                                new ConceptCreateEditEvent(textFlowPane,
+                                        EDIT_CONCEPT_OTHER_NAME, otherNamePublicId));
                     });
                 });
                 otherNamesVBox.getChildren().addAll(rows);
@@ -962,8 +902,8 @@ public class DetailsController  {
         this.fqnPublicId = semanticEntityVersion.publicId();
         latestFqnText.setOnMouseClicked(event -> {
             eventBus.publish(conceptTopic,
-                    new EditConceptFullyQualifiedNameEvent(latestFqnText,
-                            EditConceptFullyQualifiedNameEvent.EDIT_FQN, fqnPublicId));
+                    new ConceptCreateEditEvent(latestFqnText,
+                            ConceptCreateEditEvent.EDIT_CONCEPT_FQN, fqnPublicId));
         });
 
         String descrSemanticStr = String.join(" | ", fieldDescriptions);
@@ -1149,8 +1089,8 @@ public class DetailsController  {
 
             if (CREATE.equals(conceptViewModel.getPropertyValue(MODE))) {
                 // show the Add FQN
-                eventBus.publish(conceptTopic, new AddFullyQualifiedNameEvent(propertyToggle,
-                        AddFullyQualifiedNameEvent.ADD_FQN, getViewProperties()));
+                eventBus.publish(conceptTopic, new ConceptCreateEditEvent(propertyToggle,
+                        ADD_CONCEPT_FQN, getViewProperties()));
             } else if (EDIT.equals(conceptViewModel.getPropertyValue(MODE))){
                 // show the button form
                 eventBus.publish(conceptTopic, new OpenPropertiesPanelEvent(propertyToggle,

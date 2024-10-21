@@ -19,6 +19,9 @@ import dev.ikm.komet.framework.events.Evt;
 import dev.ikm.komet.framework.events.EvtType;
 import dev.ikm.komet.framework.view.ViewProperties;
 
+/**
+ * This event class is not used anywhere anymore.
+ */
 public class AddFullyQualifiedNameEvent extends Evt {
 
     public static final EvtType<AddFullyQualifiedNameEvent> ADD_FQN = new EvtType<>(Evt.ANY, "ADD_FQN");

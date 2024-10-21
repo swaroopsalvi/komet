@@ -119,16 +119,12 @@ public class ConceptViewModel extends FormViewModel {
     public boolean createConcept(EditCoordinateRecord editCoordinate) {
         save(); // View Model xfer values. does not save to the database but validates data and then copies data from properties to model values.
 
-        // Validation errors will not create record.
-        if (!getValidationMessages().isEmpty()) {
-            return false;
-        }
 
         // stamp exists and is populated?
         StampViewModel stampViewModel = getValue(CONCEPT_STAMP_VIEW_MODEL);
         if (stampViewModel != null) {
             stampViewModel.save(); // View Model xfer values
-            if (!stampViewModel.getValidationMessages().isEmpty()) {
+            if (!stampViewModel.hasErrorMsgs()) {
                 return false;
             }
         } else {
@@ -157,6 +153,17 @@ public class ConceptViewModel extends FormViewModel {
         // add the Fully Qualified Name to the new concept
         saveFQNwithinCreateConcept(transaction, stampEntity, getValue(FULLY_QUALIFIED_NAME), conceptFacade);
 
+        List<DescrName> otherNames = (List<DescrName>) getValueMap().get(OTHER_NAMES);
+        if (otherNames.size() > 0) {
+            // if there are other names defined, then add them to the newly created concept
+            saveOtherNameWithinCreateConcept(transaction, stampEntity, otherNames, conceptFacade);
+        }
+
+        // Validation errors will not create record.
+        if (hasErrorMsgs()) {
+            return false;
+        }
+
 
         AxiomBuilderRecord ab = newConceptBuilder.axiomBuilder();
 
@@ -180,12 +187,6 @@ public class ConceptViewModel extends FormViewModel {
 
         // add the axiom
         buildAxiom(ab, conceptRecord, stampEntity);
-
-        List<DescrName> otherNames = (List<DescrName>) getValueMap().get(OTHER_NAMES);
-        if (otherNames.size() > 0) {
-            // if there are other names defined, then add them to the newly created concept
-            saveOtherNameWithinCreateConcept(transaction, stampEntity, otherNames, conceptFacade);
-        }
 
         Entity.provider().putEntity(conceptRecord);
 

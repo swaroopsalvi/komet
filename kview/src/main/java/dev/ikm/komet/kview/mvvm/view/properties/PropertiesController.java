@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.UUID;
 
+import static dev.ikm.komet.kview.events.ConceptCreateEditEvent.ADD_CONCEPT_FQN;
 import static dev.ikm.komet.kview.fxutils.CssHelper.genText;
 import static dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel.*;
 
@@ -124,13 +125,7 @@ public class PropertiesController implements Serializable {
 
     private EvtBus eventBus;
 
-    private Subscriber<AddOtherNameToConceptEvent> addOtherNameSubscriber;
-
-    private Subscriber<EditOtherNameConceptEvent> editOtherNameSubscriber;
-
-    private Subscriber<EditConceptFullyQualifiedNameEvent> fqnSubscriber;
-
-    private Subscriber<AddFullyQualifiedNameEvent> addFqnSubscriber;
+    private Subscriber<ConceptCreateEditEvent> conceptCreateEditEventSubscriber;
 
     private Subscriber<ShowEditDescriptionPanelEvent> editDescriptionPaneSubscriber;
 
@@ -219,9 +214,45 @@ public class PropertiesController implements Serializable {
 
 
         // when we receive an event because the user clicked the
-        // Add Other Name button from the Properties > Edit bump out, we want to change the Pane in the
-        // Edit Concept bump out to be the Add Other Name form
-        addOtherNameSubscriber = evt -> {
+        // Fully Qualified Name in the Concept, we want to change the Pane in the
+        // Edit Concept bump out to be the Edit Fully Qualified Name form
+        conceptCreateEditEventSubscriber = evt -> {
+            // don't go into edit mode if there is no FQN yet
+            if (evt.getPublicId() == null) {
+                // default to adding an FQN is there isn't one
+                eventBus.publish(conceptTopic, new ConceptCreateEditEvent(evt,
+                        ADD_CONCEPT_FQN, getViewProperties()));
+                return;
+            }
+            // check if the center pane is already showing, we don't want duplicate entries in the dropdowns
+            if (!contentBorderPane.getCenter().equals(editFqnPane)) {
+                contentBorderPane.setCenter(editFqnPane);
+                editButton.setSelected(true);
+                editButton.setText("EDIT");
+                if (evt.getPublicId() != null) {
+                    editFullyQualifiedNameController.setConceptAndPopulateForm(evt.getPublicId());
+                }
+            }
+
+            // check if the center pane is already showing, we don't want duplicate entries in the dropdowns
+            if (!contentBorderPane.getCenter().equals(addFqnPane)) {
+                contentBorderPane.setCenter(addFqnPane);
+                editButton.setSelected(true);
+                editButton.setText("ADD");
+
+                // Clear existing ViewModel in form.
+                addFullyQualifiedNameController.updateModel(evt.getViewProperties(), (viewModel, controller) -> {
+                    viewModel.setPropertyValue(NAME_TEXT, "")
+                            .setPropertyValue(CASE_SIGNIFICANCE, null)
+                            .setPropertyValue(MODULE, null)
+                            .setPropertyValue(LANGUAGE, null)
+                            .setPropertyValue(STATUS, TinkarTerm.ACTIVE_STATE)
+                            .setPropertyValue(IS_SUBMITTED, false);
+                    controller.clearView();
+                    controller.updateView();
+                });
+            }
+
             // check if the center pane is already showing, we don't want duplicate entries in the dropdowns
             if (!contentBorderPane.getCenter().equals(addOtherNamePane)) {
                 contentBorderPane.setCenter(addOtherNamePane);
@@ -248,72 +279,18 @@ public class PropertiesController implements Serializable {
                     controller.updateView();
                 });
             }
-        };
-        eventBus.subscribe(conceptTopic, AddOtherNameToConceptEvent.class, addOtherNameSubscriber);
-
-        // when we receive an event because the user clicked the
-        // Add Axiom button, we want to change the Pane in the
-        // Edit Concept bump out to be the Add Axiom form
-
-        editOtherNameSubscriber = evt -> {
-            contentBorderPane.setCenter(editOtherNamePane);
-            editButton.setSelected(true);
-            editButton.setText("EDIT");
-            if (evt.getPublicId() != null) {
-                editDescriptionFormController.setConceptAndPopulateForm(evt.getPublicId());
-            }
-        };
-        eventBus.subscribe(conceptTopic, EditOtherNameConceptEvent.class, editOtherNameSubscriber);
-
-
-        // when we receive an event because the user clicked the
-        // Fully Qualified Name in the Concept, we want to change the Pane in the
-        // Edit Concept bump out to be the Edit Fully Qualified Name form
-        fqnSubscriber = evt -> {
-            // don't go into edit mode if there is no FQN yet
-            if (evt.getPublicId() == null) {
-                // default to adding an FQN is there isn't one
-                eventBus.publish(conceptTopic, new AddFullyQualifiedNameEvent(evt,
-                        AddFullyQualifiedNameEvent.ADD_FQN, getViewProperties()));
-                return;
-            }
-            // check if the center pane is already showing, we don't want duplicate entries in the dropdowns
-            if (!contentBorderPane.getCenter().equals(editFqnPane)) {
-                contentBorderPane.setCenter(editFqnPane);
+            if (!contentBorderPane.getCenter().equals(editOtherNamePane)) {
+                contentBorderPane.setCenter(editOtherNamePane);
                 editButton.setSelected(true);
                 editButton.setText("EDIT");
                 if (evt.getPublicId() != null) {
-                    editFullyQualifiedNameController.setConceptAndPopulateForm(evt.getPublicId());
+                    editDescriptionFormController.setConceptAndPopulateForm(evt.getPublicId());
                 }
             }
         };
-        eventBus.subscribe(conceptTopic, EditConceptFullyQualifiedNameEvent.class, fqnSubscriber);
+        eventBus.subscribe(conceptTopic, ConceptCreateEditEvent.class, conceptCreateEditEventSubscriber);
 
-        // this event happens on during the creation of a new concept
-        // a new concept will not have a fully qualified name and will need one
-        addFqnSubscriber = evt -> {
-            // check if the center pane is already showing, we don't want duplicate entries in the dropdowns
-            if (!contentBorderPane.getCenter().equals(addFqnPane)) {
-                contentBorderPane.setCenter(addFqnPane);
-                editButton.setSelected(true);
-                editButton.setText("ADD");
-
-                // Clear existing ViewModel in form.
-                addFullyQualifiedNameController.updateModel(evt.getViewProperties(), (viewModel, controller) -> {
-                    viewModel.setPropertyValue(NAME_TEXT, "")
-                            .setPropertyValue(CASE_SIGNIFICANCE, null)
-                            .setPropertyValue(MODULE, null)
-                            .setPropertyValue(LANGUAGE, null)
-                            .setPropertyValue(STATUS, TinkarTerm.ACTIVE_STATE)
-                            .setPropertyValue(IS_SUBMITTED, false);
-                    controller.clearView();
-                    controller.updateView();
-                });
-            }
-        };
-        eventBus.subscribe(conceptTopic, AddFullyQualifiedNameEvent.class, addFqnSubscriber);
-
-        // when opening the properties panel the default toggle to view is the history tab
+   // when opening the properties panel the default toggle to view is the history tab
         propsPanelOpen = evt -> {
             historyButton.setSelected(true);
             contentBorderPane.setCenter(historyTabsBorderPane);

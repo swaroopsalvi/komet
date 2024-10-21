@@ -15,24 +15,26 @@
  */
 package dev.ikm.komet.kview.mvvm.view.properties;
 
-import dev.ikm.komet.kview.mvvm.view.BasicController;
-import dev.ikm.komet.kview.events.AddOtherNameToConceptEvent;
-import dev.ikm.komet.kview.events.ClosePropertiesPanelEvent;
-import dev.ikm.komet.kview.events.EditConceptFullyQualifiedNameEvent;
-import dev.ikm.komet.kview.events.OpenPropertiesPanelEvent;
 import dev.ikm.komet.framework.events.EvtBus;
 import dev.ikm.komet.framework.events.EvtBusFactory;
 import dev.ikm.komet.framework.events.Subscriber;
 import dev.ikm.komet.framework.view.ViewProperties;
+import dev.ikm.komet.kview.events.ClosePropertiesPanelEvent;
+import dev.ikm.komet.kview.events.ConceptCreateEditEvent;
+import dev.ikm.komet.kview.events.OpenPropertiesPanelEvent;
+import dev.ikm.komet.kview.mvvm.view.BasicController;
 import dev.ikm.tinkar.common.id.PublicId;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.ObjectProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
+
+import static dev.ikm.komet.kview.events.ConceptCreateEditEvent.EDIT_CONCEPT_FQN;
+import static dev.ikm.komet.kview.events.ConceptCreateEditEvent.EDIT_CONCEPT_OTHER_NAME;
 
 public class EditDescriptionsController implements BasicController {
 
@@ -79,16 +81,16 @@ public class EditDescriptionsController implements BasicController {
         eventBus.subscribe(conceptTopic, OpenPropertiesPanelEvent.class, propsPanelOpen);
 
         editFullyQualifiedNameButton.setOnMouseClicked(event ->
-                eventBus.publish(conceptTopic, new EditConceptFullyQualifiedNameEvent(event,
-                        EditConceptFullyQualifiedNameEvent.EDIT_FQN, fqnPublicId.get())));
+                eventBus.publish(conceptTopic, new ConceptCreateEditEvent(event,
+                        EDIT_CONCEPT_FQN, fqnPublicId.get())));
 
         closePropertiesPanelButton.setOnMouseClicked(event ->
             eventBus.publish(conceptTopic, new ClosePropertiesPanelEvent(event,
                 ClosePropertiesPanelEvent.CLOSE_PROPERTIES)));
 
         addOtherNameButton.setOnMouseClicked(event ->
-            eventBus.publish(conceptTopic, new AddOtherNameToConceptEvent(event,
-                AddOtherNameToConceptEvent.ADD_DESCRIPTION, otherNamePublicId.get())));
+            eventBus.publish(conceptTopic, new ConceptCreateEditEvent(event,
+                    EDIT_CONCEPT_OTHER_NAME, otherNamePublicId.get())));
     }
 
 

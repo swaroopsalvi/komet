@@ -20,6 +20,10 @@ import dev.ikm.komet.framework.events.EvtType;
 import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.tinkar.common.id.PublicId;
 
+
+/**
+ * This event class is not used anywhere anymore.
+ */
 public class AddOtherNameToConceptEvent extends Evt {
 
     public static final EvtType<AddOtherNameToConceptEvent> ADD_DESCRIPTION = new EvtType<>(Evt.ANY, "ADD_DESCRIPTION");

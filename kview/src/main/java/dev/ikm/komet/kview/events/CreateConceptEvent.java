@@ -19,6 +19,10 @@ import dev.ikm.komet.kview.mvvm.model.DescrName;
 import dev.ikm.komet.framework.events.Evt;
 import dev.ikm.komet.framework.events.EvtType;
 
+
+/**
+ * This event class is not used anywhere anymore.
+ */
 public class CreateConceptEvent extends Evt {
 
     public static final EvtType<CreateConceptEvent> ADD_FQN = new EvtType<>(Evt.ANY, "ADD_FQN");

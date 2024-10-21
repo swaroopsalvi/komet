@@ -15,13 +15,13 @@
  */
 package dev.ikm.komet.kview.mvvm.view.properties;
 
-import dev.ikm.komet.kview.mvvm.view.AbstractBasicController;
-import dev.ikm.komet.kview.events.ClosePropertiesPanelEvent;
-import dev.ikm.komet.kview.events.CreateConceptEvent;
-import dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel;
 import dev.ikm.komet.framework.events.EvtBus;
 import dev.ikm.komet.framework.events.EvtBusFactory;
 import dev.ikm.komet.framework.view.ViewProperties;
+import dev.ikm.komet.kview.events.ClosePropertiesPanelEvent;
+import dev.ikm.komet.kview.events.ConceptCreateEditEvent;
+import dev.ikm.komet.kview.mvvm.view.AbstractBasicController;
+import dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel;
 import dev.ikm.tinkar.entity.ConceptEntity;
 import dev.ikm.tinkar.terms.EntityFacade;
 import dev.ikm.tinkar.terms.TinkarTerm;
@@ -209,7 +209,7 @@ public class AddOtherNameController extends AbstractBasicController {
             // publish event with the otherNameViewModel.
             // ...
             LOG.info("Ready to add to the concept view model: " + otherNameViewModel);
-            eventBus.publish(conceptTopic, new CreateConceptEvent(this, CreateConceptEvent.ADD_OTHER_NAME,
+            eventBus.publish(conceptTopic, new ConceptCreateEditEvent(this, ConceptCreateEditEvent.ADD_CONCEPT_OTHER_NAME,
                     otherNameViewModel.create()));
             clearView();
             close();
