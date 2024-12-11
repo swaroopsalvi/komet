@@ -347,8 +347,6 @@ public class PatternDetailsController {
         };
         EvtBusFactory.getDefaultEvtBus().subscribe(patternViewModel.getPropertyValue(PATTERN_TOPIC), PatternDescriptionEvent.class, patternDescriptionEventSubscriber);
 
-
-
         // bind view model
         if (!patternTitleText.textProperty().isBound()) {
             patternTitleText.textProperty().bind(patternViewModel.getProperty(PATTERN).map(p -> ((EntityFacade) p).description()));

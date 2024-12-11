@@ -124,9 +124,12 @@ public class PatternViewModel extends FormViewModel {
     // Used to load the values in the PatternField controller from PatternDetailsController.
     public static String SELECTED_PATTERN_FIELD = "selectedPatternField";
 
+    public static String PATTERN_LINKED_TO_SEMANTIC = "patternLinkedToSemantic";
+
     public PatternViewModel() {
         super();
             addProperty(VIEW_PROPERTIES, (ViewProperties) null)
+                    .addProperty(PATTERN_LINKED_TO_SEMANTIC, false)
                     .addProperty(PATTERN_TOPIC, (UUID) null)
                     .addProperty(STATE_MACHINE, (StateMachine) null)
                     .addProperty(STAMP_VIEW_MODEL, (ViewModel) null)
@@ -158,6 +161,7 @@ public class PatternViewModel extends FormViewModel {
                         ObjectProperty<?> stampModule = stampViewModel.getProperty(MODULE);
                         ObjectProperty<?> stampPath = stampViewModel.getProperty(PATH);
                         ObjectProperty<?> stampStatus = stampViewModel.getProperty(STATUS);
+                        boolean isPatternlinkedToSemantic = getPropertyValue(PATTERN_LINKED_TO_SEMANTIC);
                         // reset the error list on each validation check
                         vr.getMessages().clear();
                         if (purposeEntity.isNull().get()) {
@@ -175,13 +179,24 @@ public class PatternViewModel extends FormViewModel {
                         if (stampModule.isNull().get() || stampPath.isNull().get() || stampStatus.isNull().get()) {
                             vr.error("STAMP values are required.  Please fill out the STAMP information.");
                         }
+                        if(isPatternlinkedToSemantic){
+                            vr.error("Pattern cannot be modified and/or saved since it is linked to one or more Semantic/Concepts.");
+                        }
                         viewModel.setPropertyValue(IS_INVALID, !vr.getMessages().isEmpty());
                     });
     }
 
-    public boolean isPatternPopulated() {
-        ObjectProperty<Pattern> patternObjectProperty = getProperty(PATTERN);
-        return patternObjectProperty.isNotNull().get();
+    public void checkPatternReference(){
+        PatternFacade pattern = getPropertyValue(PATTERN);
+        if(pattern !=null){
+            int patternReferences = EntityService.get().semanticNidsOfPattern(pattern.nid()).length;
+            if(patternReferences > 0){
+                setPropertyValue(PATTERN_LINKED_TO_SEMANTIC, true);
+                //"Pattern cannot be modified and/or saved since it is linked to " + patternReferences + " Semantics."
+            }else{
+                setPropertyValue(PATTERN_LINKED_TO_SEMANTIC, false);
+            }
+        }
     }
 
     public void setPurposeAndMeaningText(PatternDefinition patternDefinition) {
@@ -284,6 +299,7 @@ public class PatternViewModel extends FormViewModel {
                         LOG.info(" Add to Definition Name : " + descrName.getNameText());
                     }
             });
+            checkPatternReference();
         }
     }
 
