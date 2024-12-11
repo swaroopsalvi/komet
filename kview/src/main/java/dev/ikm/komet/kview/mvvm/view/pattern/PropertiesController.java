@@ -49,7 +49,6 @@ import static dev.ikm.komet.kview.mvvm.viewmodel.PatternFieldsViewModel.FIELD_OR
 import static dev.ikm.komet.kview.mvvm.viewmodel.PatternFieldsViewModel.PREVIOUS_PATTERN_FIELD;
 import static dev.ikm.komet.kview.mvvm.viewmodel.PatternFieldsViewModel.TOTAL_EXISTING_FIELDS;
 import static dev.ikm.komet.kview.mvvm.viewmodel.PatternViewModel.MEANING_ENTITY;
-import static dev.ikm.komet.kview.mvvm.viewmodel.PatternViewModel.PATTERN_LINKED_TO_SEMANTIC;
 import static dev.ikm.komet.kview.mvvm.viewmodel.PatternViewModel.PATTERN_TOPIC;
 import static dev.ikm.komet.kview.mvvm.viewmodel.PatternViewModel.PURPOSE_ENTITY;
 import static dev.ikm.komet.kview.mvvm.viewmodel.PatternViewModel.STATE_MACHINE;
@@ -73,7 +72,6 @@ import dev.ikm.komet.kview.mvvm.viewmodel.PatternPropertiesViewModel;
 import dev.ikm.komet.kview.mvvm.viewmodel.PatternViewModel;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
@@ -127,9 +125,6 @@ public class PropertiesController {
 
     @InjectViewModel
     private PatternViewModel patternViewModel;
-
-    @FXML
-    private TextField messageTextField;
 
     @FXML
     private SVGPath commentsButton;
@@ -194,8 +189,6 @@ public class PropertiesController {
         JFXNode<Pane, HistoryController> patternHistoryJFXNode = FXMLMvvmLoader.make(historyConfig);
         historyController = patternHistoryJFXNode.controller();
         historyPane = patternHistoryJFXNode.node();
-
-        messageTextField.visibleProperty().bindBidirectional(patternViewModel.getProperty(PATTERN_LINKED_TO_SEMANTIC));
 
         // +-----------------------------------------------------------------------
         // ! confirmation panel reused by several forms

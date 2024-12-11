@@ -2,7 +2,6 @@
 
 <?import java.lang.String?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.BorderPane?>
@@ -62,7 +61,4 @@
          </center>
       </BorderPane>
    </center>
-   <bottom>
-      <TextField fx:id="messageTextField" disable="true" editable="false" text="Pattern cannot be modified and saved since it is linked to one or more Semantic/Concepts." BorderPane.alignment="CENTER" />
-   </bottom>
 </BorderPane>
