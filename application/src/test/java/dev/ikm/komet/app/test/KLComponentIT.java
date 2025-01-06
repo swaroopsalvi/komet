@@ -8,6 +8,7 @@ import dev.ikm.tinkar.common.service.CachingService;
 import dev.ikm.tinkar.common.service.PrimitiveData;
 import dev.ikm.tinkar.common.service.ServiceKeys;
 import dev.ikm.tinkar.common.service.ServiceProperties;
+import dev.ikm.tinkar.component.FieldDataType;
 import dev.ikm.tinkar.coordinate.Coordinates;
 import dev.ikm.tinkar.coordinate.view.ViewCoordinateRecord;
 import dev.ikm.tinkar.coordinate.view.calculator.ViewCalculator;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class KLComponentIT {
     private static final Logger LOG = LoggerFactory.getLogger(KLComponentIT.class);
@@ -37,10 +39,22 @@ public class KLComponentIT {
         viewCalculator.forEachSemanticVersionForComponentOfPattern(entity.nid(), TinkarTerm.DESCRIPTION_PATTERN.nid(),
                 (semanticEntityVersion,  entityVersion1, patternEntityVersion) -> {
                     ObservableSemantic observableEntitySemantic = ObservableEntity.get(semanticEntityVersion.nid());
-                    ObservableSemanticSnapshot observableSemanticSnapshot =
+                    ObservableSemanticSnapshot observableSemanticSnapshot = observableEntitySemantic.getSnapshot(viewCalculator);
+                    System.out.println("ObservableSemantic :" + observableEntitySemantic);
+                    System.out.println("ObservableSemanticSnapshot :" + observableSemanticSnapshot);
 
-
-
+                    AtomicInteger counter = new AtomicInteger(0);
+                    semanticEntityVersion.fieldValues().forEach(field -> {
+                        FieldDataType fieldDataType = semanticEntityVersion.fieldDataType(counter.getAndIncrement());
+                        if(fieldDataType == FieldDataType.CONCEPT){
+                            System.out.println("FIELD ENTITY: " + field);
+                        }else{
+                         //   ObservableField observableField =
+                         //   KlStringField klStringField = new KLStringFieldImplementation();
+                            System.out.println("FIELD : " + field);
+                        }
+                    });
+                    System.out.println(" ======= ");
         });
         /**
          * TODO Load fieldDefinitions using the Pattern

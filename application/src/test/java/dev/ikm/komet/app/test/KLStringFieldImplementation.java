@@ -21,9 +21,7 @@ public class KLStringFieldImplementation implements KlStringField{
     }
 
     public Node makeFieldNode() {
-
         return sceneGraphNode();
-
     }
 
 
