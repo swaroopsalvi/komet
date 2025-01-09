@@ -19,7 +19,6 @@ import dev.ikm.tinkar.common.id.PublicId;
 import dev.ikm.tinkar.component.Stamp;
 import dev.ikm.tinkar.entity.ConceptEntity;
 import dev.ikm.tinkar.terms.ConceptFacade;
-import dev.ikm.tinkar.terms.EntityProxy;
 
 public class DescrName {
 
@@ -137,5 +136,9 @@ public class DescrName {
 
     public Stamp getStamp() {
         return stamp;
+    }
+
+    public String toString(){
+        return "publicId: " + parentConcept + ", NameText: " + nameText + ", NameType: " + nameType.description();
     }
 }

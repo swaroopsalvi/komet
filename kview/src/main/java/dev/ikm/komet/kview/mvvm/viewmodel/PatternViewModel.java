@@ -24,8 +24,8 @@ import static dev.ikm.tinkar.coordinate.stamp.StampFields.TIME;
 import static dev.ikm.tinkar.terms.EntityProxy.Pattern;
 import static dev.ikm.tinkar.terms.TinkarTerm.ACCEPTABLE;
 import static dev.ikm.tinkar.terms.TinkarTerm.DEFINITION_DESCRIPTION_TYPE;
-import static dev.ikm.tinkar.terms.TinkarTerm.REGULAR_NAME_DESCRIPTION_TYPE;
 import dev.ikm.komet.framework.view.ViewProperties;
+import dev.ikm.komet.kview.mvvm.model.DataModelHelper;
 import dev.ikm.komet.kview.mvvm.model.DescrName;
 import dev.ikm.komet.kview.mvvm.model.PatternDefinition;
 import dev.ikm.komet.kview.mvvm.model.PatternField;
@@ -46,6 +46,8 @@ import dev.ikm.tinkar.entity.Entity;
 import dev.ikm.tinkar.entity.EntityService;
 import dev.ikm.tinkar.entity.EntityVersion;
 import dev.ikm.tinkar.entity.FieldDefinitionRecord;
+import dev.ikm.tinkar.entity.FieldRecord;
+import dev.ikm.tinkar.entity.PatternEntityVersion;
 import dev.ikm.tinkar.entity.PatternVersionRecord;
 import dev.ikm.tinkar.entity.SemanticEntity;
 import dev.ikm.tinkar.entity.SemanticEntityVersion;
@@ -71,8 +73,11 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 public class PatternViewModel extends FormViewModel {
 
@@ -266,43 +271,57 @@ public class PatternViewModel extends FormViewModel {
             String patternTitleText = retrieveDisplayName((PatternFacade) patternFacade);
             setPropertyValue(PATTERN_TITLE_TEXT, patternTitleText);
 
-            loadFqnDetails(patternFacade);
-
             viewCalculator.forEachSemanticVersionForComponentOfPattern(entity.nid(), TinkarTerm.DESCRIPTION_PATTERN.nid(),
                 (semanticEntityVersion,  entityVersion1, patternEntityVersion) -> {
-                    ConceptFacade language = (ConceptFacade) semanticEntityVersion.fieldValues().get(0);
-                    String string = (String) semanticEntityVersion.fieldValues().get(1);
-                    ConceptFacade caseSignificance = (ConceptFacade) semanticEntityVersion.fieldValues().get(2);
-                    ConceptFacade descriptionType = (ConceptFacade) semanticEntityVersion.fieldValues().get(3);
-                    DescrName descrName = new DescrName(null, string, descriptionType,
-                        Entity.getFast(caseSignificance.nid()), Entity.getFast(semanticEntityVersion.state().nid()),
-                            Entity.getFast(semanticEntityVersion.module().nid()),Entity.getFast(language.nid()), semanticEntityVersion.publicId());
-                if(PublicId.equals(descriptionType.publicId(), REGULAR_NAME_DESCRIPTION_TYPE.publicId())) {
-                        ObservableList<DescrName> otherNamesList = getObservableList(OTHER_NAMES);
-                        HashMap<DescrName, SemanticEntityVersion> regularNamesMap = getPropertyValue(OTHER_NAME_SEMANTIC_VERSION_MAP);
-                        // add to list.
-                        otherNamesList.add(descrName);
-                        regularNamesMap.put(descrName, semanticEntityVersion);
-                    } else if (PublicId.equals(descriptionType.publicId(), DEFINITION_DESCRIPTION_TYPE.publicId())) {
-                        LOG.info(" Add to Definition Name : " + descrName.getNameText());
-                    }
-            });
+                    loadDescriptionDetails(semanticEntityVersion, (fieldRecords) -> {
+                        AtomicReference<ConceptFacade> language = new AtomicReference<>();
+                        AtomicReference<String> stringText = new AtomicReference<>("");
+                        AtomicReference<ConceptFacade> descriptionCaseSignificance = new AtomicReference<>();
+                        AtomicReference<ConceptFacade> descriptionType = new AtomicReference<>();
+                        fieldRecords.forEach(fieldRecord -> {
+                            if(PublicId.equals(fieldRecord.fieldDefinition().purpose().publicId(), TinkarTerm.LANGUAGE.publicId())) {
+                                language.set((ConceptFacade) fieldRecord.value());
+                            } else if(PublicId.equals(fieldRecord.fieldDefinition().dataType().publicId(), TinkarTerm.STRING_FIELD.publicId()) ||
+                                    PublicId.equals(fieldRecord.fieldDefinition().dataType().publicId(), TinkarTerm.STRING.publicId())){
+                                stringText.set((String) fieldRecord.value());
+                            } else if(PublicId.equals(fieldRecord.fieldDefinition().purpose().publicId(), TinkarTerm.DESCRIPTION_CASE_SIGNIFICANCE.publicId())) {
+                                descriptionCaseSignificance.set((ConceptFacade) fieldRecord.value());
+                            } else if(PublicId.equals(fieldRecord.fieldDefinition().purpose().publicId(), TinkarTerm.DESCRIPTION_TYPE.publicId())
+                                    || PublicId.equals(fieldRecord.fieldDefinition().purpose().publicId(), TinkarTerm.DESCRIPTION_TYPE_FOR_DESCRIPTION.publicId())) {
+                                descriptionType.set((ConceptFacade) fieldRecord.value());
+                            }
+                        });
+
+                        DescrName descrName = new DescrName(null, stringText.get(), descriptionType.get(),
+                                Entity.getFast(descriptionCaseSignificance.get()), Entity.getFast(semanticEntityVersion.state().nid()),
+                                Entity.getFast(semanticEntityVersion.module().nid()), Entity.getFast(language.get()), semanticEntityVersion.publicId());
+
+                        if(PublicId.equals(descriptionType.get().publicId(), TinkarTerm.FULLY_QUALIFIED_NAME_DESCRIPTION_TYPE.publicId())){
+                            setPropertyValue(FQN_DESCRIPTION_NAME, descrName);
+                            setPropertyValue(FQN_DESCRIPTION_NAME_TEXT, stringText.get());
+                            setPropertyValue(FQN_CASE_SIGNIFICANCE, descriptionCaseSignificance.get());
+                            setPropertyValue(FQN_LANGUAGE, language.get());
+                        } else if(PublicId.equals(descriptionType.get().publicId(), TinkarTerm.REGULAR_NAME_DESCRIPTION_TYPE.publicId())){
+                            ObservableList<DescrName> otherNamesList = getObservableList(OTHER_NAMES);
+                            HashMap<DescrName, SemanticEntityVersion> regularNamesMap = getPropertyValue(OTHER_NAME_SEMANTIC_VERSION_MAP);
+                            // add to list.
+                            otherNamesList.add(descrName);
+                            regularNamesMap.put(descrName, semanticEntityVersion);
+                        } else if (PublicId.equals(descriptionType.get().publicId(), DEFINITION_DESCRIPTION_TYPE.publicId())) {
+                            LOG.info(" Add to Definition Name : " + descrName.getNameText());
+                        }
+                    });
+                });
         }
     }
 
-    private void loadFqnDetails(EntityFacade patternFacade) {
-        SemanticEntityVersion fqnSemanticEntityVersion = getViewProperties().calculator().getFullyQualifiedDescription(patternFacade).get();
-        ConceptFacade fqnLanguage = (ConceptFacade) fqnSemanticEntityVersion.fieldValues().get(0);
-        String fqnString = (String) fqnSemanticEntityVersion.fieldValues().get(1);
-        ConceptFacade fqnCaseSignificance = (ConceptFacade) fqnSemanticEntityVersion.fieldValues().get(2);
-        ConceptFacade fqnDescriptionType = (ConceptFacade) fqnSemanticEntityVersion.fieldValues().get(3);
-        DescrName fqnDescrName = new DescrName(null, fqnString, fqnDescriptionType,
-                Entity.getFast(fqnCaseSignificance.nid()), Entity.getFast(fqnSemanticEntityVersion.state().nid()),
-                Entity.getFast(fqnSemanticEntityVersion.module().nid()),Entity.getFast(fqnLanguage.nid()), fqnSemanticEntityVersion.publicId());
-        setPropertyValue(FQN_DESCRIPTION_NAME, fqnDescrName);
-        setPropertyValue(FQN_DESCRIPTION_NAME_TEXT, fqnString);
-        setPropertyValue(FQN_CASE_SIGNIFICANCE, fqnCaseSignificance);
-        setPropertyValue(FQN_LANGUAGE, fqnLanguage);
+    private void loadDescriptionDetails(SemanticEntityVersion semanticEntityVersion, Consumer<List<FieldRecord<Object>>> consumerFieldRecords) {
+        StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
+        Latest<PatternEntityVersion> patternEntityVersionLatest = stampCalculator.latest(semanticEntityVersion.pattern());
+        patternEntityVersionLatest.ifPresent(patternEntityVersion -> {
+            List<FieldRecord<Object>> fieldRecords = DataModelHelper.fieldRecords(semanticEntityVersion, patternEntityVersion);
+            consumerFieldRecords.accept(fieldRecords);
+        });
     }
 
     private String retrieveDisplayName(PatternFacade patternFacade) {
