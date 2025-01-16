@@ -43,12 +43,12 @@ import dev.ikm.komet.framework.events.Subscriber;
 import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.events.genediting.PropertyPanelEvent;
-import dev.ikm.komet.kview.klfields.floatfield.KlFloatFieldFactory;
+import dev.ikm.komet.kview.klfields.generic.AbstractKlFieldFactory;
 import dev.ikm.komet.kview.klfields.readonly.ReadOnlyKLFieldFactory;
-import dev.ikm.komet.kview.klfields.stringfield.KlStringFieldFactory;
 import dev.ikm.komet.kview.mvvm.view.stamp.StampEditController;
 import dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel;
 import dev.ikm.komet.kview.mvvm.viewmodel.StampViewModel;
+import dev.ikm.komet.layout.component.version.field.KlFieldFactory;
 import dev.ikm.tinkar.coordinate.language.calculator.LanguageCalculator;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
@@ -62,7 +62,6 @@ import dev.ikm.tinkar.terms.EntityFacade;
 import dev.ikm.tinkar.terms.PatternFacade;
 import dev.ikm.tinkar.terms.SemanticFacade;
 import dev.ikm.tinkar.terms.State;
-import dev.ikm.tinkar.terms.TinkarTerm;
 import javafx.beans.property.ObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -320,7 +319,12 @@ public class GenEditingDetailsController {
 
             Node readOnlyNode = null;
             System.out.println("---> dataType() " + fieldRecord.dataType().description());
-            int dataTypeNid = fieldRecord.dataType().nid();
+            String dataType = fieldRecord.dataType().description();
+            ObservableField observableFields = GenEditingHelper.getObservableFields(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
+            KlFieldFactory<?> klFieldFactory = AbstractKlFieldFactory.getKlFieldFactoryInstance(dataType);
+            readOnlyNode = klFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
+
+            /*int dataTypeNid = fieldRecord.dataType().nid();
 
             // substitute each data type.
             if (dataTypeNid == TinkarTerm.COMPONENT_FIELD.nid()) {
@@ -338,7 +342,7 @@ public class GenEditingDetailsController {
                 ObservableField<Float> observableFields = GenEditingHelper.getObservableFields(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
                 KlFloatFieldFactory klFloatFieldFactory = new KlFloatFieldFactory();
                 readOnlyNode = klFloatFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
-            }
+            }*/
 
             // Add to VBox
             if (readOnlyNode != null) {

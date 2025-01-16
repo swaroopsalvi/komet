@@ -21,16 +21,14 @@ import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.SEMANTIC;
 import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.klfields.editable.EditableKLFieldFactory;
-import dev.ikm.komet.kview.klfields.floatfield.KlFloatFieldFactory;
+import dev.ikm.komet.kview.klfields.generic.AbstractKlFieldFactory;
 import dev.ikm.komet.kview.klfields.readonly.ReadOnlyKLFieldFactory;
-import dev.ikm.komet.kview.klfields.stringfield.KlStringFieldFactory;
-import dev.ikm.komet.layout.component.version.field.KlField;
+import dev.ikm.komet.layout.component.version.field.KlFieldFactory;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
 import dev.ikm.tinkar.entity.FieldRecord;
 import dev.ikm.tinkar.entity.SemanticEntityVersion;
 import dev.ikm.tinkar.terms.EntityFacade;
-import dev.ikm.tinkar.terms.TinkarTerm;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -99,7 +97,13 @@ public class SemanticFieldsController {
 
             Node node = null;
             System.out.println("---> dataType() " + fieldRecord.dataType().description());
-            int dataTypeNid = fieldRecord.dataType().nid();
+            String dataType = fieldRecord.dataType().description();
+            ObservableField observableFields = GenEditingHelper.getObservableFields(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
+            KlFieldFactory<?> klFieldFactory = AbstractKlFieldFactory.getKlFieldFactoryInstance(dataType);
+            node = klFieldFactory.create(observableFields, getViewProperties().nodeView(), true).klWidget();
+
+
+            /*int dataTypeNid = fieldRecord.dataType().nid();
             if (dataTypeNid == TinkarTerm.COMPONENT_FIELD.nid()) {
                 // load a read-only component
                 KlField klField = editFieldFactory.createComponent(fieldRecord);
@@ -119,7 +123,7 @@ public class SemanticFieldsController {
                 KlFloatFieldFactory klFloatFieldFactory = new KlFloatFieldFactory();
                 node = klFloatFieldFactory.create(floatObservableField, getViewProperties().nodeView(), true).klWidget();
                 node.setUserData(floatObservableField);
-            }
+            }*/
             // Add to VBox
             if (node != null) {
                 editFieldsVBox.getChildren().add(node);
