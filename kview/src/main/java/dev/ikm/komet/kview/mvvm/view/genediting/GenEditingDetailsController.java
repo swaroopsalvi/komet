@@ -25,6 +25,7 @@ import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.slideIn;
 import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.slideOut;
 import static dev.ikm.komet.kview.fxutils.TitledPaneHelper.putArrowOnRight;
 import static dev.ikm.komet.kview.fxutils.ViewportHelper.clipChildren;
+import static dev.ikm.komet.kview.mvvm.view.genediting.GenEditingHelper.createNode;
 import static dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel.MODULES_PROPERTY;
 import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
 import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.REF_COMPONENT;
@@ -40,15 +41,12 @@ import dev.ikm.komet.framework.Identicon;
 import dev.ikm.komet.framework.events.EvtBusFactory;
 import dev.ikm.komet.framework.events.EvtType;
 import dev.ikm.komet.framework.events.Subscriber;
-import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.events.genediting.PropertyPanelEvent;
-import dev.ikm.komet.kview.klfields.generic.AbstractKlFieldFactory;
 import dev.ikm.komet.kview.klfields.readonly.ReadOnlyKLFieldFactory;
 import dev.ikm.komet.kview.mvvm.view.stamp.StampEditController;
 import dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel;
 import dev.ikm.komet.kview.mvvm.viewmodel.StampViewModel;
-import dev.ikm.komet.layout.component.version.field.KlFieldFactory;
 import dev.ikm.tinkar.coordinate.language.calculator.LanguageCalculator;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
@@ -317,34 +315,8 @@ public class GenEditingDetailsController {
 
         Consumer<FieldRecord<Object>> updateUIConsumer = (fieldRecord) -> {
 
-            Node readOnlyNode = null;
-            System.out.println("---> dataType() " + fieldRecord.dataType().description());
-            String dataType = fieldRecord.dataType().description();
-            ObservableField observableFields = GenEditingHelper.getObservableFields(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
-            KlFieldFactory<?> klFieldFactory = AbstractKlFieldFactory.getKlFieldFactoryInstance(dataType);
-            readOnlyNode = klFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
-
-            /*int dataTypeNid = fieldRecord.dataType().nid();
-
-            // substitute each data type.
-            if (dataTypeNid == TinkarTerm.COMPONENT_FIELD.nid()) {
-                // load a read-only component
-                readOnlyNode = rowf.createReadOnlyComponent(getViewProperties(), fieldRecord);
-            } else if (dataTypeNid == TinkarTerm.STRING_FIELD.nid() || fieldRecord.dataType().nid() == TinkarTerm.STRING.nid()) {
-                ObservableField<String> observableFields = GenEditingHelper.getObservableFields(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
-                KlStringFieldFactory klStringFieldFactory = new KlStringFieldFactory();
-                readOnlyNode = klStringFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
-            } else if (dataTypeNid == TinkarTerm.COMPONENT_ID_SET_FIELD.nid()) {
-                readOnlyNode = rowf.createReadOnlyComponentSet(getViewProperties(), fieldRecord);
-            } else if (dataTypeNid == TinkarTerm.DITREE_FIELD.nid()) {
-                readOnlyNode = rowf.createReadOnlyDiTree(getViewProperties(), fieldRecord);
-            } else if (dataTypeNid == TinkarTerm.FLOAT_FIELD.nid()) {
-                ObservableField<Float> observableFields = GenEditingHelper.getObservableFields(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
-                KlFloatFieldFactory klFloatFieldFactory = new KlFloatFieldFactory();
-                readOnlyNode = klFloatFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
-            }*/
-
-            // Add to VBox
+            Node readOnlyNode = createNode(false, fieldRecord, getViewProperties(), semanticEntityVersionLatest);
+           // Add to VBox
             if (readOnlyNode != null) {
                 semanticDetailsVBox.getChildren().add(readOnlyNode);
             }

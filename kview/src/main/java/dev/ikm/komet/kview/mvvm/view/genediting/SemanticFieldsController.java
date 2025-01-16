@@ -16,14 +16,12 @@
 package dev.ikm.komet.kview.mvvm.view.genediting;
 
 
+import static dev.ikm.komet.kview.mvvm.view.genediting.GenEditingHelper.createNode;
 import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
 import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.SEMANTIC;
 import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.view.ViewProperties;
-import dev.ikm.komet.kview.klfields.editable.EditableKLFieldFactory;
-import dev.ikm.komet.kview.klfields.generic.AbstractKlFieldFactory;
 import dev.ikm.komet.kview.klfields.readonly.ReadOnlyKLFieldFactory;
-import dev.ikm.komet.layout.component.version.field.KlFieldFactory;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
 import dev.ikm.tinkar.entity.FieldRecord;
@@ -89,41 +87,11 @@ public class SemanticFieldsController {
         separator.getStyleClass().add("field-separator");
         return separator;
     }
+
     private void setupSemanticDetailsUI(Latest<SemanticEntityVersion> semanticEntityVersionLatest) {
         ReadOnlyKLFieldFactory rowf = ReadOnlyKLFieldFactory.getInstance();
-        EditableKLFieldFactory editFieldFactory = EditableKLFieldFactory.getInstance();
-
         Consumer<FieldRecord<Object>> updateUIConsumer = (fieldRecord) -> {
-
-            Node node = null;
-            System.out.println("---> dataType() " + fieldRecord.dataType().description());
-            String dataType = fieldRecord.dataType().description();
-            ObservableField observableFields = GenEditingHelper.getObservableFields(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
-            KlFieldFactory<?> klFieldFactory = AbstractKlFieldFactory.getKlFieldFactoryInstance(dataType);
-            node = klFieldFactory.create(observableFields, getViewProperties().nodeView(), true).klWidget();
-
-
-            /*int dataTypeNid = fieldRecord.dataType().nid();
-            if (dataTypeNid == TinkarTerm.COMPONENT_FIELD.nid()) {
-                // load a read-only component
-                KlField klField = editFieldFactory.createComponent(fieldRecord);
-                node = klField.klWidget();
-                node.setUserData(klField.field());
-            } else if (dataTypeNid == TinkarTerm.STRING_FIELD.nid() || fieldRecord.dataType().nid() == TinkarTerm.STRING.nid()) {
-                KlStringFieldFactory stringFieldTextFactory = new KlStringFieldFactory();
-                ObservableField<String> stringObservableField = GenEditingHelper.getObservableFields(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
-                node = stringFieldTextFactory.create(stringObservableField, getViewProperties().nodeView(), true).klWidget();
-                node.setUserData(stringObservableField);
-            } else if (dataTypeNid == TinkarTerm.COMPONENT_ID_SET_FIELD.nid()) {
-                node = rowf.createReadOnlyComponentSet(getViewProperties(), fieldRecord);
-            } else if (dataTypeNid == TinkarTerm.DITREE_FIELD.nid()) {
-                node = rowf.createReadOnlyDiTree(getViewProperties(), fieldRecord);
-            }else if (dataTypeNid == TinkarTerm.FLOAT_FIELD.nid() || fieldRecord.dataType().nid() == TinkarTerm.FLOAT.nid()) {
-                ObservableField<Float> floatObservableField = GenEditingHelper.getObservableFields(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
-                KlFloatFieldFactory klFloatFieldFactory = new KlFloatFieldFactory();
-                node = klFloatFieldFactory.create(floatObservableField, getViewProperties().nodeView(), true).klWidget();
-                node.setUserData(floatObservableField);
-            }*/
+            Node node = createNode(true, fieldRecord, getViewProperties(), semanticEntityVersionLatest);
             // Add to VBox
             if (node != null) {
                 editFieldsVBox.getChildren().add(node);
