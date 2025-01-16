@@ -51,7 +51,7 @@ public class KLFloatControl extends Control {
      * or null if no value is set.
      */
     private final ObjectProperty<Float> valueProperty = new SimpleObjectProperty<>(this, "value");
-    public final ObjectProperty<Float> SimplevalueProperty() {
+    public final ObjectProperty<Float> valueProperty() {
         return valueProperty;
     }
     public final Float getValue() {
