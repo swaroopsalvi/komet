@@ -6,6 +6,7 @@ import dev.ikm.komet.kview.controls.KLBooleanControl;
 import dev.ikm.komet.kview.controls.KLReadOnlyStringControl;
 import dev.ikm.komet.kview.klfields.BaseDefaultKlField;
 import dev.ikm.komet.layout.component.version.field.KlBooleanField;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.scene.Node;
 
@@ -22,7 +23,13 @@ public class DefaultKlBooleanField extends BaseDefaultKlField<Boolean> implement
             node = klBooleanControl;
         } else {
             KLReadOnlyStringControl readOnlyStringControl = new KLReadOnlyStringControl();
-            readOnlyStringControl.setText(String.valueOf(observableBooleanField.value()));
+            readOnlyStringControl.textProperty().bind(new ObjectBinding<>() {
+                {super.bind(observableBooleanField.valueProperty());}
+                @Override
+                protected String computeValue() {
+                    return String.valueOf(observableBooleanField.value());
+                }
+            });
             readOnlyStringControl.setTitle(getTitle());
             node = readOnlyStringControl;
         }
