@@ -103,6 +103,16 @@ module dev.ikm.komet.kview {
     exports dev.ikm.komet.kview.mvvm.view.genediting;
     exports dev.ikm.komet.kview.events.genediting;
 
+
+    opens dev.ikm.komet.kview.klfields.booleanfield;
+    exports dev.ikm.komet.kview.klfields.booleanfield;
+    opens dev.ikm.komet.kview.klfields.floatfield;
+    exports dev.ikm.komet.kview.klfields.floatfield;
+    opens dev.ikm.komet.kview.klfields.stringfield;
+    exports dev.ikm.komet.kview.klfields.stringfield;
+    opens dev.ikm.komet.kview.klfields.integerfield;
+    exports dev.ikm.komet.kview.klfields.integerfield;
+
     // TODO a temporary export screen for next gen ui.
     opens dev.ikm.komet.kview.mvvm.view;
     exports dev.ikm.komet.kview.mvvm.view;
@@ -139,6 +149,9 @@ module dev.ikm.komet.kview {
     //provides dev.ikm.komet.layout.component.version.field.FieldFactory with dev.ikm.komet.kview.klfields.StringFieldLabelFactory;
 
     provides dev.ikm.komet.framework.KometNodeFactory with dev.ikm.komet.kview.mvvm.view.details.DetailsNodeFactory, dev.ikm.komet.kview.mvvm.view.properties.PropertiesNodeFactory;
+
+    provides dev.ikm.komet.layout.component.version.field.KlFieldFactory with dev.ikm.komet.kview.klfields.stringfield.KlStringFieldFactory, dev.ikm.komet.kview.klfields.floatfield.KlFloatFieldFactory, dev.ikm.komet.kview.klfields.integerfield.KlIntegerFieldFactory, dev.ikm.komet.kview.klfields.booleanfield.KlBooleanFieldFactory;
+
 
     uses dev.ikm.komet.framework.events.EvtBus;
 }
