@@ -21,6 +21,7 @@ import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
 import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.SEMANTIC;
 import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.view.ViewProperties;
+import dev.ikm.komet.kview.klfields.componentfield.KlComponentSetFieldFactory;
 import dev.ikm.komet.kview.klfields.editable.EditableKLFieldFactory;
 import dev.ikm.komet.kview.klfields.floatfield.KlFloatFieldFactory;
 import dev.ikm.komet.kview.klfields.integerField.KlIntegerFieldFactory;
@@ -29,6 +30,8 @@ import dev.ikm.komet.kview.klfields.stringfield.KlStringFieldFactory;
 import dev.ikm.komet.layout.component.version.field.KlField;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
+import dev.ikm.tinkar.entity.Entity;
+import dev.ikm.tinkar.entity.EntityVersion;
 import dev.ikm.tinkar.entity.FieldRecord;
 import dev.ikm.tinkar.entity.SemanticEntityVersion;
 import dev.ikm.tinkar.terms.EntityFacade;
@@ -44,6 +47,7 @@ import org.carlfx.cognitive.viewmodel.ValidationViewModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class SemanticFieldsController {
@@ -112,7 +116,11 @@ public class SemanticFieldsController {
                 node = stringFieldTextFactory.create(stringObservableField, getViewProperties().nodeView(), true).klWidget();
                 node.setUserData(stringObservableField);
             } else if (dataTypeNid == TinkarTerm.COMPONENT_ID_SET_FIELD.nid()) {
-                node = rowf.createReadOnlyComponentSet(getViewProperties(), fieldRecord);
+                ObservableField<Set<Entity<EntityVersion>>> floatObservableField = obtainObservableField(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
+                KlComponentSetFieldFactory klComponentSetFieldFactory = new KlComponentSetFieldFactory();
+                node = klComponentSetFieldFactory.create(floatObservableField, getViewProperties().nodeView(), true).klWidget();
+                node.setUserData(floatObservableField);
+//                node = rowf.createReadOnlyComponentSet(getViewProperties(), fieldRecord);
             } else if (dataTypeNid == TinkarTerm.DITREE_FIELD.nid()) {
                 node = rowf.createReadOnlyDiTree(getViewProperties(), fieldRecord);
             }else if (dataTypeNid == TinkarTerm.FLOAT_FIELD.nid() || fieldRecord.dataType().nid() == TinkarTerm.FLOAT.nid()) {

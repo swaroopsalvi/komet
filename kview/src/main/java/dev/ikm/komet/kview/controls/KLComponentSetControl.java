@@ -2,16 +2,14 @@ package dev.ikm.komet.kview.controls;
 
 import dev.ikm.komet.kview.controls.skin.KLComponentSetControlSkin;
 import dev.ikm.tinkar.entity.Entity;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
 import javafx.scene.control.Control;
 import javafx.scene.control.Skin;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Set;
 
 /**
  * <p>KLComponentSetControl is a custom control that acts as a template capable of populating multiple,
@@ -59,11 +57,11 @@ public class KLComponentSetControl extends Control {
     /**
      * This property holds the list of {@link Entity Entities} that have been added to the control
      */
-    private final ListProperty<Entity<?>> entitiesProperty = new SimpleListProperty<>(FXCollections.observableList(new LinkedList<>()));
-    public final ListProperty<Entity<?>> entitiesProperty() {
+    private final ObjectProperty<Set<Entity<?>>> entitiesProperty = new SimpleObjectProperty<>(this, "entitySet");
+    public final ObjectProperty<Set<Entity<?>>> entitiesProperty() {
        return entitiesProperty;
     }
-    public final List<Entity<?>> getEntitiesList() {
+    public final Set<Entity<?>> getEntitiesList() {
        return entitiesProperty.get();
     }
 

@@ -44,6 +44,7 @@ import dev.ikm.komet.framework.events.Subscriber;
 import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.events.genediting.PropertyPanelEvent;
+import dev.ikm.komet.kview.klfields.componentfield.KlComponentSetFieldFactory;
 import dev.ikm.komet.kview.klfields.floatfield.KlFloatFieldFactory;
 import dev.ikm.komet.kview.klfields.integerField.KlIntegerFieldFactory;
 import dev.ikm.komet.kview.klfields.readonly.ReadOnlyKLFieldFactory;
@@ -55,6 +56,8 @@ import dev.ikm.tinkar.coordinate.language.calculator.LanguageCalculator;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
 import dev.ikm.tinkar.entity.ConceptEntity;
+import dev.ikm.tinkar.entity.Entity;
+import dev.ikm.tinkar.entity.EntityVersion;
 import dev.ikm.tinkar.entity.FieldRecord;
 import dev.ikm.tinkar.entity.PatternEntityVersion;
 import dev.ikm.tinkar.entity.SemanticEntityVersion;
@@ -95,6 +98,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class GenEditingDetailsController {
@@ -333,6 +337,10 @@ public class GenEditingDetailsController {
                 KlStringFieldFactory klStringFieldFactory = new KlStringFieldFactory();
                 readOnlyNode = klStringFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
             } else if (dataTypeNid == TinkarTerm.COMPONENT_ID_SET_FIELD.nid()) {
+                ObservableField<Set<Entity<EntityVersion>>> observableFields = obtainObservableField(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
+                KlComponentSetFieldFactory klComponentSetFieldFactory = new KlComponentSetFieldFactory();
+                readOnlyNode = klComponentSetFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
+
                 readOnlyNode = rowf.createReadOnlyComponentSet(getViewProperties(), fieldRecord);
             } else if (dataTypeNid == TinkarTerm.DITREE_FIELD.nid()) {
                 readOnlyNode = rowf.createReadOnlyDiTree(getViewProperties(), fieldRecord);
