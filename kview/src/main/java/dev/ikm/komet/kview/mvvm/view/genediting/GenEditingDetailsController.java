@@ -16,38 +16,19 @@
 package dev.ikm.komet.kview.mvvm.view.genediting;
 
 
-import static dev.ikm.komet.kview.events.genediting.PropertyPanelEvent.CLOSE_PANEL;
-import static dev.ikm.komet.kview.events.genediting.PropertyPanelEvent.OPEN_PANEL;
-import static dev.ikm.komet.kview.events.genediting.PropertyPanelEvent.SHOW_EDIT_SEMANTIC_FIELDS;
-import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.isClosed;
-import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.isOpen;
-import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.slideIn;
-import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.slideOut;
-import static dev.ikm.komet.kview.fxutils.TitledPaneHelper.putArrowOnRight;
-import static dev.ikm.komet.kview.fxutils.ViewportHelper.clipChildren;
-import static dev.ikm.komet.kview.mvvm.model.DataModelHelper.obtainObservableField;
-import static dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel.MODULES_PROPERTY;
-import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
-import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.REF_COMPONENT;
-import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.SEMANTIC;
-import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.WINDOW_TOPIC;
-import static dev.ikm.komet.kview.mvvm.viewmodel.StampViewModel.PATHS_PROPERTY;
-import static dev.ikm.tinkar.coordinate.stamp.StampFields.AUTHOR;
-import static dev.ikm.tinkar.coordinate.stamp.StampFields.MODULE;
-import static dev.ikm.tinkar.coordinate.stamp.StampFields.PATH;
-import static dev.ikm.tinkar.coordinate.stamp.StampFields.STATUS;
-import static dev.ikm.tinkar.coordinate.stamp.StampFields.TIME;
 import dev.ikm.komet.framework.Identicon;
 import dev.ikm.komet.framework.events.EvtBusFactory;
 import dev.ikm.komet.framework.events.EvtType;
 import dev.ikm.komet.framework.events.Subscriber;
 import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.view.ViewProperties;
+import dev.ikm.komet.kview.events.genediting.GenEditingEvent;
 import dev.ikm.komet.kview.events.genediting.PropertyPanelEvent;
 import dev.ikm.komet.kview.klfields.componentfield.KlComponentFieldFactory;
 import dev.ikm.komet.kview.klfields.componentfield.KlComponentSetFieldFactory;
 import dev.ikm.komet.kview.klfields.floatfield.KlFloatFieldFactory;
-import dev.ikm.komet.kview.klfields.integerField.KlIntegerFieldFactory;
+import dev.ikm.komet.kview.klfields.integerfield.KlIntegerFieldFactory;
+import dev.ikm.komet.kview.klfields.booleanfield.KlBooleanFieldFactory;
 import dev.ikm.komet.kview.klfields.readonly.ReadOnlyKLFieldFactory;
 import dev.ikm.komet.kview.klfields.stringfield.KlStringFieldFactory;
 import dev.ikm.komet.kview.mvvm.view.stamp.StampEditController;
@@ -63,11 +44,11 @@ import dev.ikm.tinkar.entity.SemanticEntityVersion;
 import dev.ikm.tinkar.entity.StampEntity;
 import dev.ikm.tinkar.terms.ConceptFacade;
 import dev.ikm.tinkar.terms.EntityFacade;
-import dev.ikm.tinkar.terms.EntityProxy;
 import dev.ikm.tinkar.terms.PatternFacade;
 import dev.ikm.tinkar.terms.SemanticFacade;
 import dev.ikm.tinkar.terms.State;
 import dev.ikm.tinkar.terms.TinkarTerm;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -98,8 +79,32 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import static dev.ikm.komet.kview.events.genediting.PropertyPanelEvent.CLOSE_PANEL;
+import static dev.ikm.komet.kview.events.genediting.PropertyPanelEvent.OPEN_PANEL;
+import static dev.ikm.komet.kview.events.genediting.PropertyPanelEvent.SHOW_EDIT_SEMANTIC_FIELDS;
+import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.isClosed;
+import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.isOpen;
+import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.slideIn;
+import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.slideOut;
+import static dev.ikm.komet.kview.fxutils.TitledPaneHelper.putArrowOnRight;
+import static dev.ikm.komet.kview.fxutils.ViewportHelper.clipChildren;
+import static dev.ikm.komet.kview.mvvm.model.DataModelHelper.obtainObservableField;
+import static dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel.MODULES_PROPERTY;
+import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
+import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.REF_COMPONENT;
+import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.SEMANTIC;
+import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.WINDOW_TOPIC;
+import static dev.ikm.komet.kview.mvvm.viewmodel.StampViewModel.PATHS_PROPERTY;
+import static dev.ikm.tinkar.coordinate.stamp.StampFields.AUTHOR;
+import static dev.ikm.tinkar.coordinate.stamp.StampFields.MODULE;
+import static dev.ikm.tinkar.coordinate.stamp.StampFields.PATH;
+import static dev.ikm.tinkar.coordinate.stamp.StampFields.STATUS;
+import static dev.ikm.tinkar.coordinate.stamp.StampFields.TIME;
 
 public class GenEditingDetailsController {
 
@@ -185,6 +190,8 @@ public class GenEditingDetailsController {
     @InjectViewModel
     private GenEditingViewModel genEditingViewModel;
 
+    private List<ObservableField<?>> observableFields = new ArrayList<>();
+
     /**
      * Stamp Edit
      */
@@ -193,7 +200,8 @@ public class GenEditingDetailsController {
 
     private Subscriber<PropertyPanelEvent> propertiesEventSubscriber;
 
-    public GenEditingDetailsController() {}
+    public GenEditingDetailsController() {
+    }
 
     @FXML
     private void initialize() {
@@ -232,10 +240,28 @@ public class GenEditingDetailsController {
 
         // Setup Properties Bump out view.
         setupProperties();
+
+        //Set up the Listener to refresh the details area
+        Subscriber<GenEditingEvent> refreshSubscriber = evt -> {
+            if (evt.getEventType() == GenEditingEvent.PUBLISH) {
+                Platform.runLater(() -> {
+                    for (int i = 0; i < evt.getList().size(); i++) {
+                        ObservableField field = observableFields.get(i);
+                        ObservableField updatedField = evt.getList().get(i);
+                        if (updatedField != null && field != null) {
+                            field.valueProperty().setValue(updatedField.valueProperty().getValue());
+                        }
+                    }
+                });
+            }
+        };
+        EvtBusFactory.getDefaultEvtBus().subscribe(genEditingViewModel.getPropertyValue(WINDOW_TOPIC),
+                GenEditingEvent.class, refreshSubscriber);
     }
 
     /**
      * Upper right button that allows user to edit stamp popup
+     *
      * @param semanticEntityVersionLatest
      */
     private void setupStampPopup(Latest<SemanticEntityVersion> semanticEntityVersionLatest) {
@@ -253,6 +279,7 @@ public class GenEditingDetailsController {
         ;
         stampViewModel.save(true);
     }
+
     private void updateUIStamp(ViewModel stampViewModel) {
         updateTimeText(stampViewModel.getValue(TIME));
         ConceptEntity moduleEntity = stampViewModel.getValue(MODULE);
@@ -270,9 +297,10 @@ public class GenEditingDetailsController {
     public ValidationViewModel getStampViewModel() {
         return stampViewModel;
     }
+
     private void updateTimeText(Long time) {
         DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MMM-dd HH:mm:ss");
-        Instant stampInstance = Instant.ofEpochSecond(time/1000);
+        Instant stampInstance = Instant.ofEpochSecond(time / 1000);
         ZonedDateTime stampTime = ZonedDateTime.ofInstant(stampInstance, ZoneOffset.UTC);
         String lastUpdated = DATE_TIME_FORMATTER.format(stampTime);
         lastUpdatedText.setText(lastUpdated);
@@ -280,6 +308,7 @@ public class GenEditingDetailsController {
 
     /**
      * Display the Reference Component section underneath Semantic Title.
+     *
      * @param semanticEntityVersionLatest
      */
     private void setupReferenceComponentUI(Latest<SemanticEntityVersion> semanticEntityVersionLatest) {
@@ -330,27 +359,35 @@ public class GenEditingDetailsController {
             // substitute each data type.
             if (dataTypeNid == TinkarTerm.COMPONENT_FIELD.nid()) {
                 // load a read-only component
-                ObservableField<EntityProxy> observableFields = obtainObservableField(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
-                KlComponentFieldFactory klComponentFieldFactory = new KlComponentFieldFactory();
-                readOnlyNode = klComponentFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
+                readOnlyNode = rowf.createReadOnlyComponent(getViewProperties(), fieldRecord);
+                observableFields.add(null);
             } else if (dataTypeNid == TinkarTerm.STRING_FIELD.nid() || fieldRecord.dataType().nid() == TinkarTerm.STRING.nid()) {
-                ObservableField<String> observableFields = obtainObservableField(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
+                ObservableField<String> observableField = obtainObservableField(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
                 KlStringFieldFactory klStringFieldFactory = new KlStringFieldFactory();
-                readOnlyNode = klStringFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
+                readOnlyNode = klStringFieldFactory.create(observableField, getViewProperties().nodeView(), false).klWidget();
+                observableFields.add(observableField);
             } else if (dataTypeNid == TinkarTerm.COMPONENT_ID_SET_FIELD.nid()) {
                 ObservableField<Set<EntityProxy>> observableFields = obtainObservableField(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
                 KlComponentSetFieldFactory klComponentSetFieldFactory = new KlComponentSetFieldFactory();
                 readOnlyNode = klComponentSetFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
             } else if (dataTypeNid == TinkarTerm.DITREE_FIELD.nid()) {
                 readOnlyNode = rowf.createReadOnlyDiTree(getViewProperties(), fieldRecord);
+                observableFields.add(null);
             } else if (dataTypeNid == TinkarTerm.FLOAT_FIELD.nid()) {
-                ObservableField<Float> observableFields = obtainObservableField(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
+                ObservableField<Float> observableField = obtainObservableField(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
                 KlFloatFieldFactory klFloatFieldFactory = new KlFloatFieldFactory();
-                readOnlyNode = klFloatFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
-            }else if (dataTypeNid == TinkarTerm.INTEGER_FIELD.nid()) {
-                ObservableField<Integer> observableFields = obtainObservableField(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
+                readOnlyNode = klFloatFieldFactory.create(observableField, getViewProperties().nodeView(), false).klWidget();
+                observableFields.add(observableField);
+            } else if (dataTypeNid == TinkarTerm.INTEGER_FIELD.nid()) {
+                ObservableField<Integer> observableField = obtainObservableField(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
                 KlIntegerFieldFactory klIntegerFieldFactory = new KlIntegerFieldFactory();
-                readOnlyNode = klIntegerFieldFactory.create(observableFields, getViewProperties().nodeView(), false).klWidget();
+                readOnlyNode = klIntegerFieldFactory.create(observableField, getViewProperties().nodeView(), false).klWidget();
+                observableFields.add(observableField);
+            } else if (dataTypeNid == TinkarTerm.BOOLEAN_FIELD.nid()) {
+                ObservableField<Boolean> observableField = obtainObservableField(getViewProperties(), semanticEntityVersionLatest, fieldRecord);
+                KlBooleanFieldFactory klBooleanFieldFactory = new KlBooleanFieldFactory();
+                readOnlyNode = klBooleanFieldFactory.create(observableField, getViewProperties().nodeView(), false).klWidget();
+                observableFields.add(observableField);
             }
 
             // Add to VBox
@@ -361,7 +398,7 @@ public class GenEditingDetailsController {
         rowf.setupSemanticDetailsUI(getViewProperties(), semanticEntityVersionLatest, updateUIConsumer);
     }
 
-   /**
+    /**
      * Setup the Properties bump out when user clicks on the Properties toggle to slide open the Properties view.
      */
     private void setupProperties() {
@@ -456,6 +493,7 @@ public class GenEditingDetailsController {
     private void showAddEditRefComponentPanel(ActionEvent actionEvent) {
 
     }
+
     @FXML
     private void showAndEditSemanticFieldsPanel(ActionEvent actionEvent) {
         EntityFacade semantic = genEditingViewModel.getPropertyValue(SEMANTIC);
@@ -468,16 +506,17 @@ public class GenEditingDetailsController {
         // open properties bump out.
         EvtBusFactory.getDefaultEvtBus().publish(genEditingViewModel.getPropertyValue(WINDOW_TOPIC), new PropertyPanelEvent(actionEvent.getSource(), OPEN_PANEL));
     }
+
     @FXML
     private void openReasonerSlideout(ActionEvent actionEvent) {
         // TODO: perform reasoner
-        System.out.println("TODO: perform reasoner bumpout: " +actionEvent);
+        System.out.println("TODO: perform reasoner bumpout: " + actionEvent);
     }
 
     @FXML
     private void openTimelinePanel(ActionEvent actionEvent) {
         // TODO: perform reasoner
-        System.out.println("TODO: perform openTimelinePanel bumpout: " +actionEvent);
+        System.out.println("TODO: perform openTimelinePanel bumpout: " + actionEvent);
     }
 
 //    @FXML
@@ -528,6 +567,7 @@ public class GenEditingDetailsController {
 
     /**
      * When user clicks on the pencil icon to reveal the dynamic edit (KlFields) fields.
+     *
      * @param actionEvent Button click action
      */
     @FXML
@@ -540,6 +580,7 @@ public class GenEditingDetailsController {
 
     /**
      * User is clicking on the Toggle switch to open or close Properties bump out.
+     *
      * @param event Button click event.
      */
     @FXML
