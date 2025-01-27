@@ -4,12 +4,11 @@ import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.view.ObservableView;
 import dev.ikm.komet.layout.component.version.field.KlField;
 import dev.ikm.komet.layout.component.version.field.KlFieldFactory;
-import dev.ikm.tinkar.entity.Entity;
-import dev.ikm.tinkar.entity.EntityVersion;
+import dev.ikm.tinkar.terms.EntityProxy;
 
 import java.util.Set;
 
-public class KlComponentSetFieldFactory implements KlFieldFactory<Set<Entity<EntityVersion>>> {
+public class KlComponentSetFieldFactory implements KlFieldFactory<Set<EntityProxy>> {
 
     /**
      * Creates a new instance of {@link KlField} associated with the provided observable data
@@ -23,7 +22,7 @@ public class KlComponentSetFieldFactory implements KlFieldFactory<Set<Entity<Ent
      * @return a new {@link KlField} instance parameterized with the same type as the provided {@link ObservableField}.
      */
     @Override
-    public KlField<Set<Entity<EntityVersion>>> create(ObservableField<Set<Entity<EntityVersion>>> observableField, ObservableView observableView, boolean editable) {
+    public KlField<Set<EntityProxy>> create(ObservableField<Set<EntityProxy>> observableField, ObservableView observableView, boolean editable) {
         return new DefaultKlComponentSetField(observableField, observableView, editable);
     }
 
@@ -36,7 +35,7 @@ public class KlComponentSetFieldFactory implements KlFieldFactory<Set<Entity<Ent
      * interface extending {@link KlField}.
      */
     @Override
-    public Class<? extends KlField<Set<Entity<EntityVersion>>>> getFieldInterface() {
+    public Class<? extends KlField<Set<EntityProxy>>> getFieldInterface() {
         return null;
     }
 
@@ -48,7 +47,7 @@ public class KlComponentSetFieldFactory implements KlFieldFactory<Set<Entity<Ent
      * of {@link KlField} associated with this factory.
      */
     @Override
-    public Class<? extends KlField<Set<Entity<EntityVersion>>>> getFieldImplementation() {
+    public Class<? extends KlField<Set<EntityProxy>>> getFieldImplementation() {
         return DefaultKlComponentSetField.class;
     }
 

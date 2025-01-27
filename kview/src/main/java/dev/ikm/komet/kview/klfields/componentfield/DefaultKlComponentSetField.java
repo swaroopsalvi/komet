@@ -8,38 +8,42 @@ import dev.ikm.komet.kview.controls.KLReadOnlyComponentControl;
 import dev.ikm.komet.kview.klfields.BaseDefaultKlField;
 import dev.ikm.komet.layout.component.version.field.KlComponentSetField;
 import dev.ikm.tinkar.common.id.IntIdSet;
-import dev.ikm.tinkar.entity.Entity;
-import dev.ikm.tinkar.entity.EntityVersion;
+import dev.ikm.tinkar.terms.EntityProxy;
 import javafx.beans.property.ObjectProperty;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 
 import java.util.Set;
 
-public class DefaultKlComponentSetField extends BaseDefaultKlField<Set<Entity<EntityVersion>>> implements KlComponentSetField<Entity<EntityVersion>, EntityVersion> {
+public class DefaultKlComponentSetField extends BaseDefaultKlField<Set<EntityProxy>> implements KlComponentSetField {
 
-    public DefaultKlComponentSetField(ObservableField<Set<Entity<EntityVersion>>> observableComponentSetField, ObservableView observableView, boolean isEditable) {
+    public DefaultKlComponentSetField(ObservableField<Set<EntityProxy>> observableComponentSetField, ObservableView observableView, boolean isEditable) {
         super(observableComponentSetField, observableView, isEditable);
         Node node;
+        ObjectProperty<Set<EntityProxy>> observablePropertySet = observableComponentSetField.valueProperty();
+        IntIdSet entities = (IntIdSet) observablePropertySet.get();
         if (isEditable) {
             KLComponentSetControl klComponentSetControl = new KLComponentSetControl();
-//            klComponentSetControl.entitiesProperty().bindBidirectional(observableComponentSetField.valueProperty());
             klComponentSetControl.setTitle(getTitle());
-
-            Set<Entity<EntityVersion>> entities = field().value();
-            klComponentSetControl.getEntitiesList().addAll(entities);
-
+            entities.forEach(nid -> {
+                EntityProxy entityProxy = EntityProxy.make(nid);
+                klComponentSetControl.getEntitiesSet().add(entityProxy);
+            });
             node = klComponentSetControl;
         } else {
-            ObjectProperty<Set<Entity<EntityVersion>>> observablePropertySet = observableComponentSetField.valueProperty();
-            IntIdSet entities = (IntIdSet) observablePropertySet.get();
-            KLReadOnlyComponentControl readOnlyComponentControl = new KLReadOnlyComponentControl();
-            entities.forEach(entity -> {
-                readOnlyComponentControl.setTitle(entity.entityDataType().name());
-                readOnlyComponentControl.setText(entity.description());
-                readOnlyComponentControl.setIcon(Identicon.generateIdenticonImage(entity.publicId()));
-
+            VBox vBox = new VBox();
+            vBox.getChildren().add(new Label(getTitle()));
+            entities.forEach(nid -> {
+                KLReadOnlyComponentControl readOnlyComponentControl = new KLReadOnlyComponentControl();
+                EntityProxy entityProxy = EntityProxy.make(nid);
+                readOnlyComponentControl.setText(entityProxy.description());
+                readOnlyComponentControl.setIcon(Identicon.generateIdenticonImage(entityProxy.publicId()));
+                vBox.getChildren().add(readOnlyComponentControl);
             });
-            node = readOnlyComponentControl;
+            node = vBox;
+
+
 
 
 
