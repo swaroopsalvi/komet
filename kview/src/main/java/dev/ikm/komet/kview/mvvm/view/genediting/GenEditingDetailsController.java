@@ -392,7 +392,6 @@ public class GenEditingDetailsController {
                 readOnlyNode = klBooleanFieldFactory.create(observableField, getViewProperties().nodeView(), false).klWidget();
                 observableFields.add(observableField);
             }
-
             // Add to VBox
             if (readOnlyNode != null) {
                 semanticDetailsVBox.getChildren().add(readOnlyNode);

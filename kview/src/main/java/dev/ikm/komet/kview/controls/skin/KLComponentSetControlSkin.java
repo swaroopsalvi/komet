@@ -4,6 +4,7 @@ import dev.ikm.komet.kview.controls.KLComponentControl;
 import dev.ikm.komet.kview.controls.KLComponentSetControl;
 import dev.ikm.tinkar.terms.EntityProxy;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.collections.ListChangeListener;
 import javafx.event.Event;
 import javafx.geometry.Insets;
@@ -29,13 +30,13 @@ public class KLComponentSetControlSkin extends SkinBase<KLComponentSetControl> {
 
     private final ListChangeListener<Node> nodeListChangeListener = change -> {
         while(change.next()) {
-            if (change.wasAdded()) {
+            if (change.wasAdded() && change.getAddedSize() == 1) {
                 EntityProxy entity = ((KLComponentControl) change.getAddedSubList().getFirst()).getEntity();
                 if (entity != null) {
                     getSkinnable().getEntitiesSet().add(entity);
                 }
-            } else if (change.wasRemoved()) {
-                EntityProxy entity = ((KLComponentControl) change.getRemoved()).getEntity();
+            } else if (change.wasRemoved() && change.getRemovedSize() == 1) {
+                EntityProxy entity = ((KLComponentControl) change.getRemoved().getFirst()).getEntity();
                 getSkinnable().getEntitiesSet().remove(entity);
             }
         }
@@ -62,11 +63,14 @@ public class KLComponentSetControlSkin extends SkinBase<KLComponentSetControl> {
         getChildren().addAll(titleLabel, addEntryButton);
         getChildren().addListener(nodeListChangeListener);
         // Only allow one empty KLComponentControl
-        addEntryButton.disableProperty().bind(Bindings.createBooleanBinding(() ->
-                getChildren().stream().anyMatch(n -> n instanceof KLComponentControl cc && cc.getEntity() == null),
-                getChildren(), control.entitiesProperty()));
+        BooleanBinding booleanBinding = Bindings.createBooleanBinding(() ->
+                        getChildren().stream().anyMatch(n ->
+                                n instanceof KLComponentControl cc && cc.getEntity() == null)
+                ,getChildren(), control.entitiesProperty());
+        addEntryButton.disableProperty().bind(booleanBinding);
 
         getSkinnable().setOnMouseDragReleased(Event::consume);
+
     }
 
     private void createComponentUI(){
@@ -75,18 +79,18 @@ public class KLComponentSetControlSkin extends SkinBase<KLComponentSetControl> {
 
     private void createComponentUI(EntityProxy entityProxy) {
         {
-            KLComponentSetControl control = getSkinnable();
+            KLComponentSetControl klComponentSetControl = getSkinnable();
             KLComponentControl componentControl = new KLComponentControl();
             componentControl.setEntity(entityProxy);
             Subscription subscription = componentControl.entityProperty().subscribe(entity -> {
-                if (entity != null) {
-                    control.getEntitiesSet().add(entity);
+                if (entity != null && !klComponentSetControl.getEntitiesSet().contains(entity)) {
+                    klComponentSetControl.getEntitiesSet().add(entity);
                 }
             });
             componentControl.setOnRemoveAction(ev -> {
                 subscription.unsubscribe();
                 getChildren().remove(componentControl);
-                if (control.getEntitiesSet().isEmpty()) {
+                if (klComponentSetControl.getEntitiesSet().isEmpty()) {
                     addEntryButton.fire();
                 }
             });
@@ -94,6 +98,7 @@ public class KLComponentSetControlSkin extends SkinBase<KLComponentSetControl> {
             if(!getChildren().isEmpty()){
                 index = getChildren().size() -1;
             }
+
             getChildren().add(index, componentControl);
             getSkinnable().requestLayout();
         }
