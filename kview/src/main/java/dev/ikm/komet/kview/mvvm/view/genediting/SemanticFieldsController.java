@@ -106,6 +106,7 @@ public class SemanticFieldsController {
         separator.getStyleClass().add("field-separator");
         return separator;
     }
+
     private void setupSemanticDetailsUI(Latest<SemanticEntityVersion> semanticEntityVersionLatest) {
         ReadOnlyKLFieldFactory rowf = ReadOnlyKLFieldFactory.getInstance();
         EditableKLFieldFactory editFieldFactory = EditableKLFieldFactory.getInstance();
