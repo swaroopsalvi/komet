@@ -59,7 +59,6 @@ import dev.ikm.tinkar.terms.EntityFacade;
 import dev.ikm.tinkar.terms.PatternFacade;
 import dev.ikm.tinkar.terms.SemanticFacade;
 import dev.ikm.tinkar.terms.State;
-import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -231,8 +230,8 @@ public class GenEditingDetailsController {
 
         //Set up the Listener to refresh the details area (After user hits submit button on the right side)
         Subscriber<GenEditingEvent> refreshSubscriber = evt -> {
-            if (evt.getEventType() == GenEditingEvent.PUBLISH) {
-                Platform.runLater(() -> {
+            if (evt.getEventType() == GenEditingEvent.PUBLISH && evt.getNid() == semantic.nid()) {
+//                Platform.runLater(() -> {
                     for (int i = 0; i < evt.getList().size(); i++) {
                         ObservableField field = observableFields.get(i);
                         ObservableField updatedField = evt.getList().get(i);
@@ -246,7 +245,7 @@ public class GenEditingDetailsController {
                             //}
                         }
                     }
-                });
+//                });
             }
         };
         EvtBusFactory.getDefaultEvtBus().subscribe(genEditingViewModel.getPropertyValue(WINDOW_TOPIC),
