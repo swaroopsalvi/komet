@@ -58,7 +58,6 @@ public class KlFieldHelper {
         ReadOnlyKLFieldFactory rowf = ReadOnlyKLFieldFactory.getInstance();
         List<ObservableField<?>> observableFields = new ArrayList<>();
         Consumer<FieldRecord<Object>> updateUIConsumer = (fieldRecord) -> {
-
             Node node = null;
             int dataTypeNid = fieldRecord.dataType().nid();
             ObservableField writeObservableField = obtainObservableField(viewProperties, semanticEntityVersionLatest, fieldRecord);

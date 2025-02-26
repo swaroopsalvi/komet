@@ -435,11 +435,12 @@ public class GenEditingDetailsController {
     @FXML
     private void showAddEditRefComponentPanel(ActionEvent actionEvent) {
         EntityFacade referenceComponent = genEditingViewModel.getPropertyValue(REF_COMPONENT);
+        EntityFacade semantic = genEditingViewModel.getPropertyValue(SEMANTIC);
         // notify bump out to display edit fields in bump out area.
         EvtBusFactory.getDefaultEvtBus()
                 .publish(genEditingViewModel.getPropertyValue(WINDOW_TOPIC),
                         new PropertyPanelEvent(actionEvent.getSource(),
-                                SHOW_EDIT_REFERENCE_COMPONENT, referenceComponent));
+                                SHOW_EDIT_REFERENCE_COMPONENT, semantic));
         // open properties bump out.
         EvtBusFactory.getDefaultEvtBus().publish(genEditingViewModel.getPropertyValue(WINDOW_TOPIC), new PropertyPanelEvent(actionEvent.getSource(), OPEN_PANEL));
     }

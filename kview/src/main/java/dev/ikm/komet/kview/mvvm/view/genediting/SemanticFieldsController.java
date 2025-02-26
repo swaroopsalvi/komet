@@ -19,6 +19,7 @@ package dev.ikm.komet.kview.mvvm.view.genediting;
 import static dev.ikm.komet.kview.events.genediting.GenEditingEvent.PUBLISH;
 import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.CURRENT_JOURNAL_WINDOW_TOPIC;
 import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
+import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.REF_COMPONENT;
 import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.SEMANTIC;
 import dev.ikm.komet.framework.events.EvtBusFactory;
 import dev.ikm.komet.framework.observable.ObservableField;
@@ -82,16 +83,25 @@ public class SemanticFieldsController {
         editFieldsVBox.getChildren().clear();
 
         EntityFacade semantic = semanticFieldsViewModel.getPropertyValue(SEMANTIC);
+        EntityFacade referenceComponent = semanticFieldsViewModel.getPropertyValue(REF_COMPONENT);
+
         if (semantic != null) {
             StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
             Latest<SemanticEntityVersion> semanticEntityVersionLatest = stampCalculator.latest(semantic.nid());
             if (semanticEntityVersionLatest.isPresent()) {
-                // Populate the Semantic Details
-                // Displaying editable controls and populating the observable fields array list.
-                observableFields.addAll(KlFieldHelper
-                        .displayEditableSemanticFields(getViewProperties(),
-                                editFieldsVBox,
-                                semanticEntityVersionLatest));
+                if(referenceComponent == null) {
+                    // Populate the Semantic Details
+                    // Displaying editable controls and populating the observable fields array list.
+                    observableFields.addAll(KlFieldHelper
+                            .displayEditableSemanticFields(getViewProperties(),
+                                    editFieldsVBox,
+                                    semanticEntityVersionLatest));
+                }else {
+                    observableFields.addAll(KlFieldHelper
+                            .displayEditableSemanticFields(getViewProperties(),
+                                    editFieldsVBox,
+                                    semanticEntityVersionLatest));
+                }
             } else {
                 // TODO Add a new semantic based on a pattern (blank fields).
             }

@@ -34,6 +34,10 @@ public class PropertyPanelEvent extends Evt {
 
     /*** private variables ***/
     private EntityFacade semantic;
+
+    /*** private variables ***/
+    private EntityFacade referenceComponent;
+
     /**
      *
      * @param source        the object on which the Event initially occurred
@@ -52,7 +56,23 @@ public class PropertyPanelEvent extends Evt {
         super(source, eventType);
         this.semantic = semantic;
     }
+
+    /**
+     *
+     * @param source
+     * @param eventType
+     */
+    public PropertyPanelEvent(Object source, EvtType<PropertyPanelEvent> eventType, EntityFacade semantic, EntityFacade referenceComponent) {
+        super(source, eventType);
+        this.semantic = semantic;
+        this.referenceComponent = referenceComponent;
+    }
+
     public EntityFacade getSemantic() {
         return semantic;
+    }
+
+    public EntityFacade getReferenceComponent() {
+        return referenceComponent;
     }
 }
