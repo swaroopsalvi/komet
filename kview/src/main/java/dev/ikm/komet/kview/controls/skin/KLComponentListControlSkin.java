@@ -76,6 +76,11 @@ public class KLComponentListControlSkin extends SkinBase<KLComponentListControl>
         addEntryButton = new Button(getString("add.entry.button.text"));
         addEntryButton.getStyleClass().add("add-entry-button");
         addEntryButton.setOnAction(event -> createComponentUI(0));
+        addEntryButton.disableProperty().addListener((O, t1, t2) -> {
+            if(t2){
+                getChildren().get(getChildren().size()-2).requestFocus();
+            }
+        });
 
         getChildren().addAll(titleLabel, addEntryButton);
 
