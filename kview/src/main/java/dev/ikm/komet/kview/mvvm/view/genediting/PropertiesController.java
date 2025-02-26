@@ -89,12 +89,19 @@ public class PropertiesController {
     private void setupShowingPanelHandlers() {
         showPanelSubscriber = evt -> {
             LOG.info("Show Panel by event type: " + evt.getEventType());
-            if (evt.getEventType() == PropertyPanelEvent.SHOW_EDIT_SEMANTIC_FIELDS) {
-//                System.out.println("show edit semantic_fields panel");
-                if (editFieldsJfxNode == null) {
-//                    System.out.println(evt.getSemantic());
-                    propertyToggleButtonGroup.selectToggle(addEditButton);
-                    Config config = new Config(this.getClass().getResource("semantic-edit-fields.fxml"));
+            if (editFieldsJfxNode == null) {
+                propertyToggleButtonGroup.selectToggle(addEditButton);
+                Config config = new Config(this.getClass().getResource("semantic-edit-fields.fxml"));
+                if (evt.getEventType() == PropertyPanelEvent.SHOW_EDIT_SEMANTIC_FIELDS) {
+                    config.updateViewModel("semanticFieldsViewModel", (semanticFieldsViewModel) -> {
+                        semanticFieldsViewModel
+                            .addProperty(CURRENT_JOURNAL_WINDOW_TOPIC, propertiesViewModel.getObjectProperty(CURRENT_JOURNAL_WINDOW_TOPIC))
+                            .addProperty(WINDOW_TOPIC, propertiesViewModel.getObjectProperty(WINDOW_TOPIC))
+                            .addProperty(VIEW_PROPERTIES, propertiesViewModel.getObjectProperty(VIEW_PROPERTIES))
+                            .addProperty(SEMANTIC, evt.getSemantic());
+                    });
+                    editFieldsJfxNode = FXMLMvvmLoader.make(config);
+                } else if (evt.getEventType() == PropertyPanelEvent.SHOW_EDIT_REFERENCE_COMPONENT) {
                     config.updateViewModel("semanticFieldsViewModel", (semanticFieldsViewModel) -> {
                         semanticFieldsViewModel
                                 .addProperty(CURRENT_JOURNAL_WINDOW_TOPIC, propertiesViewModel.getObjectProperty(CURRENT_JOURNAL_WINDOW_TOPIC))

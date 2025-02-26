@@ -18,6 +18,7 @@ package dev.ikm.komet.kview.mvvm.view.genediting;
 
 import static dev.ikm.komet.kview.events.genediting.PropertyPanelEvent.CLOSE_PANEL;
 import static dev.ikm.komet.kview.events.genediting.PropertyPanelEvent.OPEN_PANEL;
+import static dev.ikm.komet.kview.events.genediting.PropertyPanelEvent.SHOW_EDIT_REFERENCE_COMPONENT;
 import static dev.ikm.komet.kview.events.genediting.PropertyPanelEvent.SHOW_EDIT_SEMANTIC_FIELDS;
 import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.isClosed;
 import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.isOpen;
@@ -433,7 +434,14 @@ public class GenEditingDetailsController {
 
     @FXML
     private void showAddEditRefComponentPanel(ActionEvent actionEvent) {
-
+        EntityFacade referenceComponent = genEditingViewModel.getPropertyValue(REF_COMPONENT);
+        // notify bump out to display edit fields in bump out area.
+        EvtBusFactory.getDefaultEvtBus()
+                .publish(genEditingViewModel.getPropertyValue(WINDOW_TOPIC),
+                        new PropertyPanelEvent(actionEvent.getSource(),
+                                SHOW_EDIT_REFERENCE_COMPONENT, referenceComponent));
+        // open properties bump out.
+        EvtBusFactory.getDefaultEvtBus().publish(genEditingViewModel.getPropertyValue(WINDOW_TOPIC), new PropertyPanelEvent(actionEvent.getSource(), OPEN_PANEL));
     }
 
     @FXML
