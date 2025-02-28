@@ -15,6 +15,7 @@ import dev.ikm.komet.kview.klfields.stringfield.KlStringFieldFactory;
 import dev.ikm.komet.kview.mvvm.model.DataModelHelper;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
+import dev.ikm.tinkar.entity.EntityVersion;
 import dev.ikm.tinkar.entity.FieldRecord;
 import dev.ikm.tinkar.entity.PatternEntityVersion;
 import dev.ikm.tinkar.entity.SemanticEntityVersion;
@@ -45,6 +46,19 @@ public class KlFieldHelper {
                 fieldRecords.forEach(updateUIConsumer);
             });
         });
+    }
+
+    /**
+     * Returns a list of observable fields and displays editable controls on a Pane using the latest semantic entity version.
+     * @param viewProperties View Properties
+     * @param container A JavaFX Pane. e.g. VBox
+     * @param entityVersionLatest Reference component
+     * @return A list of observable fields
+     */
+    public static List<ObservableField<?>> displayEditableReferenceComponent(ViewProperties viewProperties, Pane container, Latest<EntityVersion> entityVersionLatest) {
+        List<ObservableField<?>> observableFields = new ArrayList<>();
+
+        return observableFields;
     }
 
     /**

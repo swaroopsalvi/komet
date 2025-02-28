@@ -1,20 +1,4 @@
-/*
- * Copyright © 2015 Integrated Knowledge Management (support@ikm.dev)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package dev.ikm.komet.kview.mvvm.view.genediting;
-
 
 import static dev.ikm.komet.kview.events.genediting.GenEditingEvent.PUBLISH;
 import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.CURRENT_JOURNAL_WINDOW_TOPIC;
@@ -56,7 +40,6 @@ import javafx.scene.layout.VBox;
 import org.carlfx.cognitive.loader.InjectViewModel;
 import org.carlfx.cognitive.viewmodel.ValidationViewModel;
 import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,12 +49,12 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class SemanticFieldsController {
+public class EditConceptReferenceController {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SemanticFieldsController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EditConceptReferenceController.class);
 
     @FXML
-    private VBox editFieldsVBox;
+    private VBox editConceptReferenceVBox;
     @FXML
     private Button cancelButton;
 
@@ -88,25 +71,13 @@ public class SemanticFieldsController {
 
     @FXML
     private void initialize() {
-        // clear all semantic details.
-        editFieldsVBox.setSpacing(8.0);
-        editFieldsVBox.getChildren().clear();
+        editConceptReferenceVBox.setSpacing(8.0);
+        editConceptReferenceVBox.getChildren().clear();
 
         EntityFacade semantic = semanticFieldsViewModel.getPropertyValue(SEMANTIC);
         EntityFacade referenceComponent = semanticFieldsViewModel.getPropertyValue(REF_COMPONENT);
         StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
-        if (semantic != null) {
-            Latest<SemanticEntityVersion> semanticEntityVersionLatest = stampCalculator.latest(semantic.nid());
-            if (semanticEntityVersionLatest.isPresent()) {
-                if(referenceComponent == null) {
-                    // Populate the Semantic Details
-                    // Displaying editable controls and populating the observable fields array list.
-                    observableFields.addAll(KlFieldHelper
-                            .displayEditableSemanticFields(getViewProperties(),
-                                    editFieldsVBox,
-                                    semanticEntityVersionLatest));
-                }else {
-
+        if (referenceComponent != null) {
 
                     KlComponentFieldFactory componentFieldFactory = new KlComponentFieldFactory();
 //                    ObservableField observableField = new ObservableField(writeObservableField.field(), false);
@@ -132,10 +103,10 @@ public class SemanticFieldsController {
                             .displayEditableReferenceComponent(getViewProperties(),
                                     editFieldsVBox,
                                     entityVersionLatest));*/
-                }
-            } else {
-                // TODO Add a new semantic based on a pattern (blank fields).
-            }
+                }else {
+                    // TODO Add a new reference component / blank field.
+                 }
+
 
         }
     }
@@ -226,4 +197,5 @@ public class SemanticFieldsController {
             }
         });
     }
+}
 }

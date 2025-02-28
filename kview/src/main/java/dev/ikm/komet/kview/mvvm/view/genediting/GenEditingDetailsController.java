@@ -440,7 +440,7 @@ public class GenEditingDetailsController {
         EvtBusFactory.getDefaultEvtBus()
                 .publish(genEditingViewModel.getPropertyValue(WINDOW_TOPIC),
                         new PropertyPanelEvent(actionEvent.getSource(),
-                                SHOW_EDIT_REFERENCE_COMPONENT, semantic));
+                                SHOW_EDIT_REFERENCE_COMPONENT, semantic, referenceComponent));
         // open properties bump out.
         EvtBusFactory.getDefaultEvtBus().publish(genEditingViewModel.getPropertyValue(WINDOW_TOPIC), new PropertyPanelEvent(actionEvent.getSource(), OPEN_PANEL));
     }
