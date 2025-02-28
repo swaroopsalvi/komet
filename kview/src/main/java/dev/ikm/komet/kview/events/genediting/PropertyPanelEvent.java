@@ -32,8 +32,13 @@ public class PropertyPanelEvent extends Evt {
     public static final EvtType<PropertyPanelEvent> SHOW_EDIT_REFERENCE_COMPONENT = new EvtType<>(SHOW_PANEL, "SHOW_EDIT_REFERENCE_COMPONENT");
 
 
+    public static final EvtType<PropertyPanelEvent> SHOW_EDIT_SINGLE_SEMANTIC_FIELD = new EvtType<>(SHOW_EDIT_SEMANTIC_FIELDS, "SHOW_EDIT_SINGLE_SEMANTIC_FIELD");
+
     /*** private variables ***/
     private EntityFacade semantic;
+
+    private int fieldIndex;
+
 
     /*** private variables ***/
     private EntityFacade referenceComponent;
@@ -57,6 +62,12 @@ public class PropertyPanelEvent extends Evt {
         this.semantic = semantic;
     }
 
+    public PropertyPanelEvent(Object source, EvtType<PropertyPanelEvent> eventType, int fieldIndex) {
+        super(source, eventType);
+        this.fieldIndex = fieldIndex;
+    }
+
+
     /**
      *
      * @param source
@@ -70,6 +81,10 @@ public class PropertyPanelEvent extends Evt {
 
     public EntityFacade getSemantic() {
         return semantic;
+    }
+
+    public int getObservableFieldIndex() {
+        return fieldIndex;
     }
 
     public EntityFacade getReferenceComponent() {

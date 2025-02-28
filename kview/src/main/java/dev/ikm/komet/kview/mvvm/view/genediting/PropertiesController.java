@@ -18,9 +18,9 @@ package dev.ikm.komet.kview.mvvm.view.genediting;
 
 import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.CURRENT_JOURNAL_WINDOW_TOPIC;
 import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
-import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.REF_COMPONENT;
 import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.SEMANTIC;
 import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.WINDOW_TOPIC;
+import static dev.ikm.tinkar.provider.search.Indexer.FIELD_INDEX;
 import dev.ikm.komet.framework.events.EvtBusFactory;
 import dev.ikm.komet.framework.events.Subscriber;
 import dev.ikm.komet.kview.events.genediting.GenEditingEvent;
@@ -37,6 +37,7 @@ import org.carlfx.cognitive.loader.InjectViewModel;
 import org.carlfx.cognitive.loader.JFXNode;
 import org.carlfx.cognitive.loader.NamedVm;
 import org.carlfx.cognitive.viewmodel.SimpleViewModel;
+import org.carlfx.cognitive.viewmodel.ValidationViewModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,32 +89,27 @@ public class PropertiesController {
     }
 
     private void setupShowingPanelHandlers() {
+        Config config = new Config(this.getClass().getResource("semantic-edit-fields.fxml"));
+        config.updateViewModel("semanticFieldsViewModel", (semanticFieldsViewModel) -> {
+            semanticFieldsViewModel
+                    .addProperty(CURRENT_JOURNAL_WINDOW_TOPIC, propertiesViewModel.getObjectProperty(CURRENT_JOURNAL_WINDOW_TOPIC))
+                    .addProperty(WINDOW_TOPIC, propertiesViewModel.getObjectProperty(WINDOW_TOPIC))
+                    .addProperty(VIEW_PROPERTIES, propertiesViewModel.getObjectProperty(VIEW_PROPERTIES))
+                    .addProperty(SEMANTIC, propertiesViewModel.getObjectProperty(SEMANTIC))
+                    .addProperty(FIELD_INDEX, -1);
+        });
+        editFieldsJfxNode = FXMLMvvmLoader.make(config);
+
         showPanelSubscriber = evt -> {
             LOG.info("Show Panel by event type: " + evt.getEventType());
-            if (editFieldsJfxNode == null) {
-                propertyToggleButtonGroup.selectToggle(addEditButton);
-                Config config = new Config(this.getClass().getResource("semantic-edit-fields.fxml"));
-                if (evt.getEventType() == PropertyPanelEvent.SHOW_EDIT_SEMANTIC_FIELDS) {
-                    config.updateViewModel("semanticFieldsViewModel", (semanticFieldsViewModel) -> {
-                        semanticFieldsViewModel
-                            .addProperty(CURRENT_JOURNAL_WINDOW_TOPIC, propertiesViewModel.getObjectProperty(CURRENT_JOURNAL_WINDOW_TOPIC))
-                            .addProperty(WINDOW_TOPIC, propertiesViewModel.getObjectProperty(WINDOW_TOPIC))
-                            .addProperty(VIEW_PROPERTIES, propertiesViewModel.getObjectProperty(VIEW_PROPERTIES))
-                            .addProperty(SEMANTIC, evt.getSemantic());
-                    });
-                    editFieldsJfxNode = FXMLMvvmLoader.make(config);
-                } else if (evt.getEventType() == PropertyPanelEvent.SHOW_EDIT_REFERENCE_COMPONENT) {
-                    config.updateViewModel("semanticFieldsViewModel", (semanticFieldsViewModel) -> {
-                        semanticFieldsViewModel
-                                .addProperty(CURRENT_JOURNAL_WINDOW_TOPIC, propertiesViewModel.getObjectProperty(CURRENT_JOURNAL_WINDOW_TOPIC))
-                                .addProperty(WINDOW_TOPIC, propertiesViewModel.getObjectProperty(WINDOW_TOPIC))
-                                .addProperty(VIEW_PROPERTIES, propertiesViewModel.getObjectProperty(VIEW_PROPERTIES))
-                                .addProperty(SEMANTIC, evt.getSemantic())
-                                .addProperty(REF_COMPONENT, evt.getReferenceComponent());
-                    });
-                    editFieldsJfxNode = FXMLMvvmLoader.make(config);
-                }
-                contentBorderPane.setCenter(editFieldsJfxNode.node());
+            propertyToggleButtonGroup.selectToggle(addEditButton);
+            contentBorderPane.setCenter(editFieldsJfxNode.node());
+            ValidationViewModel semanticFieldsViewModel = (ValidationViewModel) editFieldsJfxNode
+                    .getViewModel("semanticFieldsViewModel").get();
+            if (evt.getEventType() == PropertyPanelEvent.SHOW_EDIT_SEMANTIC_FIELDS) {
+                semanticFieldsViewModel.setPropertyValue(FIELD_INDEX, -1);
+            } else if (evt.getEventType() == PropertyPanelEvent.SHOW_EDIT_SINGLE_SEMANTIC_FIELD) {
+                semanticFieldsViewModel.setPropertyValue(FIELD_INDEX, evt.getObservableFieldIndex());
             }
         };
         EvtBusFactory.getDefaultEvtBus().subscribe(propertiesViewModel.getPropertyValue(WINDOW_TOPIC), PropertyPanelEvent.class, showPanelSubscriber);
