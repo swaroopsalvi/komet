@@ -47,6 +47,7 @@ import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.controls.KLReadOnlyBaseControl;
 import dev.ikm.komet.kview.controls.KLReadOnlyComponentListControl;
 import dev.ikm.komet.kview.controls.KLReadOnlyComponentSetControl;
+import dev.ikm.komet.kview.controls.KLReadOnlyComponentControl;
 import dev.ikm.komet.kview.events.genediting.GenEditingEvent;
 import dev.ikm.komet.kview.events.genediting.PropertyPanelEvent;
 import dev.ikm.komet.kview.klfields.KlFieldHelper;
@@ -110,6 +111,9 @@ public class GenEditingDetailsController {
     private Consumer<ToggleButton> reasonerResultsControllerConsumer;
 
     @FXML
+    private KLReadOnlyComponentControl referenceComponent;
+
+    @FXML
     private BorderPane detailsOuterBorderPane;
 
     @FXML
@@ -144,15 +148,6 @@ public class GenEditingDetailsController {
 
     @FXML
     private TitledPane referenceComponentTitledPane;
-
-    @FXML
-    private Label refComponentType;
-
-    @FXML
-    private ImageView refComponentIdenticonImageView;
-
-    @FXML
-    private Label refComponentLabel;
 
     @FXML
     private TitledPane semanticDetailsTitledPane;
@@ -365,9 +360,10 @@ public class GenEditingDetailsController {
                 case PatternFacade ignored -> "Pattern";
                 default -> "Unknown";
             };
-            refComponentType.setText(refType);
-            refComponentIdenticonImageView.setImage(Identicon.generateIdenticonImage(refComponent2.publicId()));
-            refComponentLabel.setText(refComponent2.description());
+
+            referenceComponent.setIcon(Identicon.generateIdenticonImage(refComponent2.publicId()));
+            referenceComponent.setTitle(refType);
+            referenceComponent.setText(refComponent2.description());
         };
 
         // when ever the property REF_COMPONENT changes update the UI.
@@ -519,6 +515,14 @@ public class GenEditingDetailsController {
     @FXML
     public void popupStampEdit(ActionEvent event) {
         if (stampEdit != null && stampEditController != null) {
+            // refresh modules
+            stampViewModel.getObservableList(StampViewModel.MODULES_PROPERTY).clear();
+            stampViewModel.getObservableList(StampViewModel.MODULES_PROPERTY).addAll(stampViewModel.findAllModules(getViewProperties()));
+
+            // refresh path
+            stampViewModel.getObservableList(PATHS_PROPERTY).clear();
+            stampViewModel.getObservableList(PATHS_PROPERTY).addAll(stampViewModel.findAllPaths(getViewProperties()));
+
             stampEdit.show((Node) event.getSource());
             stampEditController.selectActiveStatusToggle();
             return;
