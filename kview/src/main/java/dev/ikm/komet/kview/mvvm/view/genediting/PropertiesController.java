@@ -18,6 +18,7 @@ package dev.ikm.komet.kview.mvvm.view.genediting;
 
 import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.CURRENT_JOURNAL_WINDOW_TOPIC;
 import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
+import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.REF_COMPONENT;
 import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.SEMANTIC;
 import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.WINDOW_TOPIC;
 import static dev.ikm.tinkar.provider.search.Indexer.FIELD_INDEX;
@@ -80,6 +81,9 @@ public class PropertiesController {
 
     JFXNode<Pane, SemanticFieldsController> editFieldsJfxNode;
 
+    JFXNode<Pane, GenEditingDetailsController> genEditingDetailsControllerJFXNode;
+
+    public static final String EDIT_CONCEPT_REFERENCE_FXML = "edit-reference-component.fxml";
 
 
     @FXML
@@ -100,16 +104,35 @@ public class PropertiesController {
         });
         editFieldsJfxNode = FXMLMvvmLoader.make(config);
 
+        Config configConceptReference = new Config(this.getClass().getResource(EDIT_CONCEPT_REFERENCE_FXML));
+        configConceptReference.updateViewModel("validationViewModel", (validationViewModel) -> {
+            validationViewModel
+                    .addProperty(CURRENT_JOURNAL_WINDOW_TOPIC, propertiesViewModel.getObjectProperty(CURRENT_JOURNAL_WINDOW_TOPIC))
+                    .addProperty(WINDOW_TOPIC, propertiesViewModel.getObjectProperty(WINDOW_TOPIC))
+                    .addProperty(VIEW_PROPERTIES, propertiesViewModel.getObjectProperty(VIEW_PROPERTIES))
+                    .addProperty(SEMANTIC, propertiesViewModel.getObjectProperty(SEMANTIC))
+                    .addProperty(REF_COMPONENT, propertiesViewModel.getObjectProperty(REF_COMPONENT));
+        });
+        genEditingDetailsControllerJFXNode = FXMLMvvmLoader.make(configConceptReference);
+
         showPanelSubscriber = evt -> {
             LOG.info("Show Panel by event type: " + evt.getEventType());
             propertyToggleButtonGroup.selectToggle(addEditButton);
-            contentBorderPane.setCenter(editFieldsJfxNode.node());
+
             ValidationViewModel semanticFieldsViewModel = (ValidationViewModel) editFieldsJfxNode
                     .getViewModel("semanticFieldsViewModel").get();
+
             if (evt.getEventType() == PropertyPanelEvent.SHOW_EDIT_SEMANTIC_FIELDS) {
+                contentBorderPane.setCenter(editFieldsJfxNode.node());
                 semanticFieldsViewModel.setPropertyValue(FIELD_INDEX, -1);
             } else if (evt.getEventType() == PropertyPanelEvent.SHOW_EDIT_SINGLE_SEMANTIC_FIELD) {
+                contentBorderPane.setCenter(editFieldsJfxNode.node());
                 semanticFieldsViewModel.setPropertyValue(FIELD_INDEX, evt.getObservableFieldIndex());
+            } else if(evt.getEventType() == PropertyPanelEvent.SHOW_EDIT_REFERENCE_COMPONENT){
+                ValidationViewModel referenceComponentViewModel = (ValidationViewModel) genEditingDetailsControllerJFXNode
+                        .getViewModel("validationViewModel").get();
+                contentBorderPane.setCenter(genEditingDetailsControllerJFXNode.node());
+                referenceComponentViewModel.setPropertyValue(REF_COMPONENT, evt.getReferenceComponent());
             }
         };
         EvtBusFactory.getDefaultEvtBus().subscribe(propertiesViewModel.getPropertyValue(WINDOW_TOPIC), PropertyPanelEvent.class, showPanelSubscriber);

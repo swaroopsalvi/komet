@@ -1,15 +1,25 @@
 package dev.ikm.komet.kview.klentities;
 
-import dev.ikm.komet.framework.observable.ObservableEntity;
+import dev.ikm.komet.framework.observable.ObservableConcept;
+import dev.ikm.komet.framework.view.ObservableView;
 import dev.ikm.komet.layout.KlGadget;
 import dev.ikm.komet.layout.KlWidget;
-import dev.ikm.komet.layout.component.KlGenericComponentPane;
-import dev.ikm.komet.layout.component.KlGenericComponentPaneFactory;
+import dev.ikm.komet.layout.component.KlConceptPane;
+import dev.ikm.komet.layout.component.KlConceptPaneFactory;
 import dev.ikm.komet.layout.context.KlContextFactory;
 import dev.ikm.komet.layout.preferences.KlPreferencesFactory;
 import dev.ikm.komet.preferences.KometPreferences;
 
-public class DefaultKlGenericComponent implements KlGenericComponentPaneFactory {
+public class KlConceptComponentFactory implements KlConceptPaneFactory<KlConceptPane, ObservableConcept> {
+
+    protected final ObservableConcept observableConcept;
+    protected final ObservableView observableView;
+
+    public KlConceptComponentFactory(ObservableConcept observableConcept, ObservableView observableView) {
+        this.observableConcept = observableConcept;
+        this.observableView = observableView;
+    }
+
     /**
      * Retrieves the class type of the observable entity class that this factory creates components for.
      * Enables runtime access to the generic entity class that would otherwise be erased.
@@ -17,8 +27,8 @@ public class DefaultKlGenericComponent implements KlGenericComponentPaneFactory 
      * @return A {@link Class} object representing the type of the observable entity (OE).
      */
     @Override
-    public Class<ObservableEntity> entityType() {
-        return null;
+    public Class<ObservableConcept> entityType() {
+        return ObservableConcept.class;
     }
 
     /**
@@ -29,8 +39,8 @@ public class DefaultKlGenericComponent implements KlGenericComponentPaneFactory 
      * @return an instance of type T created using the given preferencesFactory.
      */
     @Override
-    public KlGenericComponentPane create(KlPreferencesFactory preferencesFactory) {
-        return null;
+    public KlConceptPane create(KlPreferencesFactory preferencesFactory) {
+        return new DefaultKlConceptComponentPane(true);
     }
 
     /**
@@ -46,7 +56,7 @@ public class DefaultKlGenericComponent implements KlGenericComponentPaneFactory 
      * and contextFactory.
      */
     @Override
-    public KlGenericComponentPane createWithContext(KlPreferencesFactory preferencesFactory, KlContextFactory contextFactory) {
+    public KlConceptPane createWithContext(KlPreferencesFactory preferencesFactory, KlContextFactory contextFactory) {
         return null;
     }
 
@@ -58,7 +68,7 @@ public class DefaultKlGenericComponent implements KlGenericComponentPaneFactory 
      * @return an instance of type T restored using the given preferences.
      */
     @Override
-    public KlGenericComponentPane restore(KometPreferences preferences) {
+    public KlConceptPane restore(KometPreferences preferences) {
         return null;
     }
 
@@ -69,8 +79,8 @@ public class DefaultKlGenericComponent implements KlGenericComponentPaneFactory 
      * interface extending {@link KlWidget}.
      */
     @Override
-    public Class<KlGenericComponentPane> klInterfaceClass() {
-        return null;
+    public Class<KlConceptPane> klInterfaceClass() {
+        return KlConceptPane.class;
     }
 
     /**
@@ -81,7 +91,7 @@ public class DefaultKlGenericComponent implements KlGenericComponentPaneFactory 
      * of {@link KlGadget} associated with this factory.
      */
     @Override
-    public Class<? extends KlGenericComponentPane> klImplementationClass() {
-        return null;
+    public Class<? extends KlConceptPane> klImplementationClass() {
+        return DefaultKlConceptComponentPane.class;
     }
 }

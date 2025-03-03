@@ -399,6 +399,7 @@ public class GenEditingDetailsController {
                         .setPropertyValue(WINDOW_TOPIC, genEditingViewModel.getPropertyValue(WINDOW_TOPIC))
                         .setPropertyValue(VIEW_PROPERTIES, genEditingViewModel.getPropertyValue(VIEW_PROPERTIES))
                         .setPropertyValue(SEMANTIC, genEditingViewModel.getPropertyValue(SEMANTIC))
+                        .setPropertyValue(REF_COMPONENT, genEditingViewModel.getPropertyValue(REF_COMPONENT))
                 );
 
         JFXNode<BorderPane, PropertiesController> propsFXMLLoader = FXMLMvvmLoader.make(config);

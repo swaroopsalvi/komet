@@ -13,8 +13,11 @@ import dev.ikm.komet.framework.observable.ObservableEntity;
 import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.events.genediting.GenEditingEvent;
-import dev.ikm.komet.kview.klfields.KlFieldHelper;
-import dev.ikm.komet.kview.klfields.componentfield.KlComponentFieldFactory;
+import dev.ikm.komet.kview.klentities.KlConceptComponentFactory;
+import dev.ikm.komet.layout.component.KlComponentPane;
+import dev.ikm.komet.layout.preferences.KlPreferencesFactory;
+import dev.ikm.komet.preferences.KometPreferences;
+import dev.ikm.komet.preferences.KometPreferencesImpl;
 import dev.ikm.tinkar.common.alert.AlertObject;
 import dev.ikm.tinkar.common.alert.AlertStreams;
 import dev.ikm.tinkar.common.service.TinkExecutor;
@@ -35,7 +38,9 @@ import dev.ikm.tinkar.terms.PatternFacade;
 import dev.ikm.tinkar.terms.SemanticFacade;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Separator;
 import javafx.scene.layout.VBox;
 import org.carlfx.cognitive.loader.InjectViewModel;
 import org.carlfx.cognitive.viewmodel.ValidationViewModel;
@@ -46,15 +51,16 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class EditConceptReferenceController {
+public class EditReferenceComponentController {
 
-    private static final Logger LOG = LoggerFactory.getLogger(EditConceptReferenceController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EditReferenceComponentController.class);
 
     @FXML
-    private VBox editConceptReferenceVBox;
+    private VBox editReferenceComponentVBox;
     @FXML
     private Button cancelButton;
 
@@ -65,54 +71,73 @@ public class EditConceptReferenceController {
     private Button submitButton;
 
     @InjectViewModel
-    private ValidationViewModel semanticFieldsViewModel;
+    private ValidationViewModel validationViewModel;
 
-    private List<ObservableField<?>> observableFields = new ArrayList<>();
+    private final List<ObservableField<?>> observableFields = new ArrayList<>();
+
+    private final List<Node> nodes = new ArrayList<>();
+
+    String GEN_EDIT_NODES = "/gen-edit-nodes/";
 
     @FXML
     private void initialize() {
-        editConceptReferenceVBox.setSpacing(8.0);
-        editConceptReferenceVBox.getChildren().clear();
+        editReferenceComponentVBox.setSpacing(8.0);
+        editReferenceComponentVBox.getChildren().clear();
 
-        EntityFacade semantic = semanticFieldsViewModel.getPropertyValue(SEMANTIC);
-        EntityFacade referenceComponent = semanticFieldsViewModel.getPropertyValue(REF_COMPONENT);
+        EntityFacade referenceComponent = validationViewModel.getPropertyValue(REF_COMPONENT);
         StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
         if (referenceComponent != null) {
 
-                    KlComponentFieldFactory componentFieldFactory = new KlComponentFieldFactory();
-//                    ObservableField observableField = new ObservableField(writeObservableField.field(), false);
-
-                    ObservableField observableField  = switch (referenceComponent) {
+                    switch (referenceComponent) {
                         case ConceptFacade conceptFacade -> {
+                            Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
+                            ObservableConcept observableConcept = ObservableEntity.get(conceptEntityVersionLatest.get().nid());
+                            KlConceptComponentFactory klConceptComponentFactory = new KlConceptComponentFactory(observableConcept, getViewProperties());
+                            String preferenceNodeName = GEN_EDIT_NODES +  klConceptComponentFactory.klImplementationClass().getSimpleName() + "_" + UUID.randomUUID();
+                            KometPreferences kometPreferences = KometPreferencesImpl.getConfigurationRootPreferences().node(preferenceNodeName);
+                            KlPreferencesFactory klPreferencesFactory = KlPreferencesFactory.create(kometPreferences, klConceptComponentFactory.klImplementationClass());
+                            KlComponentPane klComponentPane = klConceptComponentFactory.create(klPreferencesFactory);
+                           /* Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
+                            ObservableConcept observableConcept = ObservableEntity.get(conceptEntityVersionLatest.get().nid());
+                            ObservableConceptSnapshot observableConceptSnapshot = observableConcept.getSnapshot(getViewProperties().calculator());
+                            ObservableConceptVersion observableConceptVersion = observableConceptSnapshot.getLatestVersion().get();*/
+                        }
+                        case SemanticFacade ignored -> {
                             Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
                             ObservableConcept observableConcept = ObservableEntity.get(conceptEntityVersionLatest.get().nid());
                             ObservableConceptSnapshot observableConceptSnapshot = observableConcept.getSnapshot(getViewProperties().calculator());
                             ObservableConceptVersion observableConceptVersion = observableConceptSnapshot.getLatestVersion().get();
-
-
-
                         }
-                        case SemanticFacade ignored -> "Semantic";
-                        case PatternFacade ignored -> "Pattern";
-                        default -> "Unknown";
+                        case PatternFacade ignored -> {
+                            Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
+                            ObservableConcept observableConcept = ObservableEntity.get(conceptEntityVersionLatest.get().nid());
+                            ObservableConceptSnapshot observableConceptSnapshot = observableConcept.getSnapshot(getViewProperties().calculator());
+                            ObservableConceptVersion observableConceptVersion = observableConceptSnapshot.getLatestVersion().get();
+                        }
+                        default -> System.out.println("do nothing");
+
                     };
 
-                    componentFieldFactory.create(observableField, viewProperties.nodeView(), true).klWidget();
+      /*              componentFieldFactory.create(observableField, viewProperties.nodeView(), true).klWidget();
 
-      /*              observableFields.addAll(KlFieldHelper
+                    observableFields.addAll(KlFieldHelper
                             .displayEditableReferenceComponent(getViewProperties(),
-                                    editFieldsVBox,
+                                    editConceptReferenceVBox,
                                     entityVersionLatest));*/
                 }else {
                     // TODO Add a new reference component / blank field.
                  }
 
-
         }
+
+    private static Separator createSeparator() {
+        Separator separator = new Separator();
+        separator.getStyleClass().add("field-separator");
+        return separator;
     }
 
     public ViewProperties getViewProperties() {
-        return semanticFieldsViewModel.getPropertyValue(VIEW_PROPERTIES);
+        return validationViewModel.getPropertyValue(VIEW_PROPERTIES);
     }
 
     @FXML
@@ -139,9 +164,9 @@ public class EditConceptReferenceController {
         }
 
         //Get the semantic need to pass along with event for loading values across Opened Semantics.
-        EntityFacade semantic = semanticFieldsViewModel.getPropertyValue(SEMANTIC);
+        EntityFacade semantic = validationViewModel.getPropertyValue(SEMANTIC);
         //EventBus implementation changes to refresh the details area
-        EvtBusFactory.getDefaultEvtBus().publish(semanticFieldsViewModel.getPropertyValue(CURRENT_JOURNAL_WINDOW_TOPIC), new GenEditingEvent(actionEvent.getSource(), PUBLISH, list, semantic.nid()));
+        EvtBusFactory.getDefaultEvtBus().publish(validationViewModel.getPropertyValue(CURRENT_JOURNAL_WINDOW_TOPIC), new GenEditingEvent(actionEvent.getSource(), PUBLISH, list, semantic.nid()));
 
     }
 
@@ -150,7 +175,7 @@ public class EditConceptReferenceController {
      * @return transaction
      */
     private Transaction writeToTempTranscation() {
-        EntityFacade semantic = semanticFieldsViewModel.getPropertyValue(SEMANTIC);
+        EntityFacade semantic = validationViewModel.getPropertyValue(SEMANTIC);
         SemanticRecord semanticRecord =  Entity.getFast(semantic.nid());
         AtomicReference<Transaction> transactionAtomicReference = new AtomicReference<>();
         StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
@@ -197,5 +222,4 @@ public class EditConceptReferenceController {
             }
         });
     }
-}
 }
