@@ -99,7 +99,7 @@ public class EditReferenceComponentController {
                             KlComponentPane klComponentPane = klConceptComponentFactory.create(klPreferencesFactory);
                            /* Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
                             ObservableConcept observableConcept = ObservableEntity.get(conceptEntityVersionLatest.get().nid());
-                            ObservableConceptSnapshot observableConceptSnapshot = observableConcept.getSnapshot(getViewProperties().calculator());
+                            To sObservableConceptSnapshot observableConceptSnapshot = observableConcept.getSnapshot(getViewProperties().calculator());
                             ObservableConceptVersion observableConceptVersion = observableConceptSnapshot.getLatestVersion().get();*/
                         }
                         case SemanticFacade ignored -> {
