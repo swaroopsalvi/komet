@@ -6,19 +6,15 @@ import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
 import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.REF_COMPONENT;
 import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.SEMANTIC;
 import dev.ikm.komet.framework.events.EvtBusFactory;
-import dev.ikm.komet.framework.observable.ObservableConcept;
-import dev.ikm.komet.framework.observable.ObservableConceptSnapshot;
-import dev.ikm.komet.framework.observable.ObservableConceptVersion;
-import dev.ikm.komet.framework.observable.ObservableEntity;
 import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.view.ViewProperties;
+import dev.ikm.komet.kview.controls.KLComponentControl;
 import dev.ikm.komet.kview.events.genediting.GenEditingEvent;
 import dev.ikm.tinkar.common.alert.AlertObject;
 import dev.ikm.tinkar.common.alert.AlertStreams;
 import dev.ikm.tinkar.common.service.TinkExecutor;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
-import dev.ikm.tinkar.entity.ConceptEntityVersion;
 import dev.ikm.tinkar.entity.Entity;
 import dev.ikm.tinkar.entity.SemanticEntityVersion;
 import dev.ikm.tinkar.entity.SemanticRecord;
@@ -27,10 +23,8 @@ import dev.ikm.tinkar.entity.StampEntity;
 import dev.ikm.tinkar.entity.StampRecord;
 import dev.ikm.tinkar.entity.transaction.CommitTransactionTask;
 import dev.ikm.tinkar.entity.transaction.Transaction;
-import dev.ikm.tinkar.terms.ConceptFacade;
 import dev.ikm.tinkar.terms.EntityFacade;
-import dev.ikm.tinkar.terms.PatternFacade;
-import dev.ikm.tinkar.terms.SemanticFacade;
+import dev.ikm.tinkar.terms.EntityProxy;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -81,43 +75,10 @@ public class EditReferenceComponentController {
         EntityFacade referenceComponent = validationViewModel.getPropertyValue(REF_COMPONENT);
         StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
         if (referenceComponent != null) {
-
-                    switch (referenceComponent) {
-                        case ConceptFacade conceptFacade -> {
-                            /*Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
-                            ObservableConcept observableConcept = ObservableEntity.get(conceptEntityVersionLatest.get().nid());
-                            KlConceptComponentFactory klConceptComponentFactory = new KlConceptComponentFactory(observableConcept, getViewProperties());
-                            String preferenceNodeName = GEN_EDIT_NODES +  klConceptComponentFactory.klImplementationClass().getSimpleName() + "_" + UUID.randomUUID();
-                            KometPreferences kometPreferences = KometPreferencesImpl.getConfigurationRootPreferences().node(preferenceNodeName);
-                            KlPreferencesFactory klPreferencesFactory = KlPreferencesFactory.create(kometPreferences, klConceptComponentFactory.klImplementationClass());
-                            KlComponentPane klComponentPane = klConceptComponentFactory.create(klPreferencesFactory);*/
-                            Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
-                            ObservableConcept observableConcept = ObservableEntity.get(conceptEntityVersionLatest.get().nid());
-                            ObservableConceptSnapshot observableConceptSnapshot = observableConcept.getSnapshot(getViewProperties().calculator());
-                            ObservableConceptVersion observableConceptVersion = observableConceptSnapshot.getLatestVersion().get();
-                        }
-                        case SemanticFacade ignored -> {
-                            Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
-                            ObservableConcept observableConcept = ObservableEntity.get(conceptEntityVersionLatest.get().nid());
-                            ObservableConceptSnapshot observableConceptSnapshot = observableConcept.getSnapshot(getViewProperties().calculator());
-                            ObservableConceptVersion observableConceptVersion = observableConceptSnapshot.getLatestVersion().get();
-                        }
-                        case PatternFacade ignored -> {
-                            Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
-                            ObservableConcept observableConcept = ObservableEntity.get(conceptEntityVersionLatest.get().nid());
-                            ObservableConceptSnapshot observableConceptSnapshot = observableConcept.getSnapshot(getViewProperties().calculator());
-                            ObservableConceptVersion observableConceptVersion = observableConceptSnapshot.getLatestVersion().get();
-                        }
-                        default -> System.out.println("do nothing");
-
-                    };
-
-      /*              componentFieldFactory.create(observableField, viewProperties.nodeView(), true).klWidget();
-
-                    observableFields.addAll(KlFieldHelper
-                            .displayEditableReferenceComponent(getViewProperties(),
-                                    editConceptReferenceVBox,
-                                    entityVersionLatest));*/
+            KLComponentControl klComponentControl = new KLComponentControl();
+            klComponentControl.setTitle("Reference Component");
+            EntityProxy conceptEntity = EntityProxy.make(referenceComponent.nid());
+            klComponentControl.setEntity(conceptEntity);
                 }else {
                     // TODO Add a new reference component / blank field.
                  }
