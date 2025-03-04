@@ -13,11 +13,6 @@ import dev.ikm.komet.framework.observable.ObservableEntity;
 import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.events.genediting.GenEditingEvent;
-import dev.ikm.komet.kview.klentities.KlConceptComponentFactory;
-import dev.ikm.komet.layout.component.KlComponentPane;
-import dev.ikm.komet.layout.preferences.KlPreferencesFactory;
-import dev.ikm.komet.preferences.KometPreferences;
-import dev.ikm.komet.preferences.KometPreferencesImpl;
 import dev.ikm.tinkar.common.alert.AlertObject;
 import dev.ikm.tinkar.common.alert.AlertStreams;
 import dev.ikm.tinkar.common.service.TinkExecutor;
@@ -51,7 +46,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -90,17 +84,17 @@ public class EditReferenceComponentController {
 
                     switch (referenceComponent) {
                         case ConceptFacade conceptFacade -> {
-                            Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
+                            /*Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
                             ObservableConcept observableConcept = ObservableEntity.get(conceptEntityVersionLatest.get().nid());
                             KlConceptComponentFactory klConceptComponentFactory = new KlConceptComponentFactory(observableConcept, getViewProperties());
                             String preferenceNodeName = GEN_EDIT_NODES +  klConceptComponentFactory.klImplementationClass().getSimpleName() + "_" + UUID.randomUUID();
                             KometPreferences kometPreferences = KometPreferencesImpl.getConfigurationRootPreferences().node(preferenceNodeName);
                             KlPreferencesFactory klPreferencesFactory = KlPreferencesFactory.create(kometPreferences, klConceptComponentFactory.klImplementationClass());
-                            KlComponentPane klComponentPane = klConceptComponentFactory.create(klPreferencesFactory);
-                           /* Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
+                            KlComponentPane klComponentPane = klConceptComponentFactory.create(klPreferencesFactory);*/
+                            Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
                             ObservableConcept observableConcept = ObservableEntity.get(conceptEntityVersionLatest.get().nid());
-                            To sObservableConceptSnapshot observableConceptSnapshot = observableConcept.getSnapshot(getViewProperties().calculator());
-                            ObservableConceptVersion observableConceptVersion = observableConceptSnapshot.getLatestVersion().get();*/
+                            ObservableConceptSnapshot observableConceptSnapshot = observableConcept.getSnapshot(getViewProperties().calculator());
+                            ObservableConceptVersion observableConceptVersion = observableConceptSnapshot.getLatestVersion().get();
                         }
                         case SemanticFacade ignored -> {
                             Latest<ConceptEntityVersion> conceptEntityVersionLatest = stampCalculator.latest(referenceComponent.nid());
