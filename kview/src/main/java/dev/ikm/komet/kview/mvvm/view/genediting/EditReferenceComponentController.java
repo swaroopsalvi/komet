@@ -79,6 +79,7 @@ public class EditReferenceComponentController {
             klComponentControl.setTitle("Reference Component");
             EntityProxy conceptEntity = EntityProxy.make(referenceComponent.nid());
             klComponentControl.setEntity(conceptEntity);
+            editReferenceComponentVBox.getChildren().add(klComponentControl);
                 }else {
                     // TODO Add a new reference component / blank field.
                  }
