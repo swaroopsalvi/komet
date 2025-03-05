@@ -15,7 +15,10 @@ import dev.ikm.tinkar.common.alert.AlertStreams;
 import dev.ikm.tinkar.common.service.TinkExecutor;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
+import dev.ikm.tinkar.entity.ConceptVersionRecord;
 import dev.ikm.tinkar.entity.Entity;
+import dev.ikm.tinkar.entity.EntityVersion;
+import dev.ikm.tinkar.entity.PatternVersionRecord;
 import dev.ikm.tinkar.entity.SemanticEntityVersion;
 import dev.ikm.tinkar.entity.SemanticRecord;
 import dev.ikm.tinkar.entity.SemanticVersionRecord;
@@ -23,8 +26,11 @@ import dev.ikm.tinkar.entity.StampEntity;
 import dev.ikm.tinkar.entity.StampRecord;
 import dev.ikm.tinkar.entity.transaction.CommitTransactionTask;
 import dev.ikm.tinkar.entity.transaction.Transaction;
+import dev.ikm.tinkar.terms.ConceptFacade;
 import dev.ikm.tinkar.terms.EntityFacade;
 import dev.ikm.tinkar.terms.EntityProxy;
+import dev.ikm.tinkar.terms.PatternFacade;
+import dev.ikm.tinkar.terms.SemanticFacade;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -125,17 +131,54 @@ public class EditReferenceComponentController {
      */
     private Transaction writeToTempTranscation() {
         EntityFacade entityFacade = validationViewModel.getPropertyValue(REF_COMPONENT);
-        SemanticRecord semanticRecord =  Entity.getFast(entityFacade.nid());
+        EntityFacade semantic = validationViewModel.getPropertyValue(SEMANTIC);
+        SemanticRecord semanticRecord =  Entity.getFast(semantic.nid());
         AtomicReference<Transaction> transactionAtomicReference = new AtomicReference<>();
+
         StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
-        Latest<SemanticEntityVersion> semanticEntityVersionLatest = stampCalculator.latest(entityFacade.nid());
+        Latest<EntityVersion> entityVersionLatest = stampCalculator.latest(entityFacade.nid());
+        entityVersionLatest.ifPresent(entityVersion ->{
+            StampRecord stamp = Entity.getStamp(entityVersion.stampNid());
+            EntityVersion version = Entity.getVersionFast(entityFacade.nid(), stamp.nid());
+            if(stamp.lastVersion().committed()){
+                transactionAtomicReference.set(Transaction.make());
+                // newStamp already written to the entity store.
+                StampEntity newStamp = transactionAtomicReference.get().getStampForEntities(stamp.state(), stamp.authorNid(), stamp.moduleNid(), stamp.pathNid(), version.entity());
+                // Create new version...
+                EntityVersion newVersion =null;
+                switch (entityFacade) {
+                    case ConceptFacade conceptFacade -> {
+                        ConceptVersionRecord conceptVersionRecord = (ConceptVersionRecord) entityVersion;
+                        newVersion = conceptVersionRecord.with().stampNid(newStamp.nid()).build();
+                        conceptVersionRecord.with(
+                    }
+                    case SemanticFacade semanticFacade -> {
+                        SemanticVersionRecord semanticVersionRecord = (SemanticVersionRecord) entityVersion;
+                        newVersion = semanticVersionRecord.with().stampNid(newStamp.nid()).build();
+                    }
+                    case PatternFacade patternFacade -> {
+                        PatternVersionRecord patternVersionRecord = (PatternVersionRecord) entityVersion;
+                        newVersion = patternVersionRecord.with().stampNid(newStamp.nid()).build();
+                    }
+
+                    default -> {
+                        ConceptVersionRecord conceptVersionRecord = (ConceptVersionRecord) entityVersion;
+                        newVersion = conceptVersionRecord.with().stampNid(newStamp.nid()).build();
+                        LOG.error(" THIS IS DEFAULT ");
+                    }
+                };
+            }else{
+
+            }
+        });
+
+
+
+
         semanticEntityVersionLatest.ifPresent(semanticEntityVersion ->{
             StampRecord stamp = Entity.getStamp(semanticEntityVersion.stampNid());
             SemanticVersionRecord version = Entity.getVersionFast(entityFacade.nid(), stamp.nid());
-            MutableList fieldsForNewVersion = Lists.mutable.of(version.fieldValues().toArray());
-            observableFields.forEach(of -> {
-                fieldsForNewVersion.set(of.fieldIndex(), of.value());
-            });
+
             SemanticVersionRecord newVersion =null;
             if(stamp.lastVersion().committed()){
                 // Create transaction
