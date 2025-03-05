@@ -29,7 +29,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.Separator;
 import javafx.scene.layout.VBox;
 import org.carlfx.cognitive.loader.InjectViewModel;
 import org.carlfx.cognitive.viewmodel.ValidationViewModel;
@@ -86,12 +85,6 @@ public class EditReferenceComponentController {
 
         }
 
-    private static Separator createSeparator() {
-        Separator separator = new Separator();
-        separator.getStyleClass().add("field-separator");
-        return separator;
-    }
-
     public ViewProperties getViewProperties() {
         return validationViewModel.getPropertyValue(VIEW_PROPERTIES);
     }
@@ -131,14 +124,14 @@ public class EditReferenceComponentController {
      * @return transaction
      */
     private Transaction writeToTempTranscation() {
-        EntityFacade semantic = validationViewModel.getPropertyValue(SEMANTIC);
-        SemanticRecord semanticRecord =  Entity.getFast(semantic.nid());
+        EntityFacade entityFacade = validationViewModel.getPropertyValue(REF_COMPONENT);
+        SemanticRecord semanticRecord =  Entity.getFast(entityFacade.nid());
         AtomicReference<Transaction> transactionAtomicReference = new AtomicReference<>();
         StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
-        Latest<SemanticEntityVersion> semanticEntityVersionLatest = stampCalculator.latest(semantic.nid());
+        Latest<SemanticEntityVersion> semanticEntityVersionLatest = stampCalculator.latest(entityFacade.nid());
         semanticEntityVersionLatest.ifPresent(semanticEntityVersion ->{
             StampRecord stamp = Entity.getStamp(semanticEntityVersion.stampNid());
-            SemanticVersionRecord version = Entity.getVersionFast(semantic.nid(), stamp.nid());
+            SemanticVersionRecord version = Entity.getVersionFast(entityFacade.nid(), stamp.nid());
             MutableList fieldsForNewVersion = Lists.mutable.of(version.fieldValues().toArray());
             observableFields.forEach(of -> {
                 fieldsForNewVersion.set(of.fieldIndex(), of.value());
