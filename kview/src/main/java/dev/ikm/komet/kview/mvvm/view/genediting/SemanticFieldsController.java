@@ -81,10 +81,9 @@ public class SemanticFieldsController {
     private List<Node> nodes = new ArrayList<>();
 
     private int committedHash;
-    private int uncommittedHash;
 
     private void validator(){
-        uncommittedHash = calculteHashValue();
+        int uncommittedHash = calculteHashValue();
         submitButton.setDisable(committedHash == uncommittedHash);
     }
 
