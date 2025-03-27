@@ -77,8 +77,6 @@ public final class ObservableSemantic
     }
 
     public static Optional<ObservableSemanticSnapshot> getAxiomSnapshot(int conceptNid, int axiomPatterNid, ViewCalculator calculator) {
-
-
         int[] axiomSemanticNids = EntityService.get().semanticNidsForComponentOfPattern(conceptNid, axiomPatterNid);
         if (axiomSemanticNids.length == 0) {
             return Optional.empty();

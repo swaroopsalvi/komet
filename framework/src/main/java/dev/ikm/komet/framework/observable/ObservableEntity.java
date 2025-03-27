@@ -107,7 +107,7 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
         return (OE) observableEntity;
     }
 
-    private static void updateVersions(Entity<? extends EntityVersion> entity, ObservableEntity observableEntity) {
+    public static void updateVersions(Entity<? extends EntityVersion> entity, ObservableEntity observableEntity) {
         if (!((Entity) observableEntity.entityReference.get()).versions().equals(entity.versions())) {
             observableEntity.entityReference.set(entity);
             observableEntity.versionProperty.clear();

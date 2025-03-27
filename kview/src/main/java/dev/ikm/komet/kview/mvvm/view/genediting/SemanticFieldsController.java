@@ -16,6 +16,7 @@
 package dev.ikm.komet.kview.mvvm.view.genediting;
 
 
+import static dev.ikm.komet.framework.observable.ObservableEntity.updateVersions;
 import static dev.ikm.komet.kview.events.genediting.GenEditingEvent.PUBLISH;
 import static dev.ikm.komet.kview.klfields.KlFieldHelper.calculteHashValue;
 import static dev.ikm.komet.kview.klfields.KlFieldHelper.generateHashValue;
@@ -25,7 +26,11 @@ import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
 import static dev.ikm.komet.kview.mvvm.viewmodel.GenEditingViewModel.SEMANTIC;
 import static dev.ikm.tinkar.provider.search.Indexer.FIELD_INDEX;
 import dev.ikm.komet.framework.events.EvtBusFactory;
+import dev.ikm.komet.framework.observable.ObservableEntity;
 import dev.ikm.komet.framework.observable.ObservableField;
+import dev.ikm.komet.framework.observable.ObservableSemantic;
+import dev.ikm.komet.framework.observable.ObservableSemanticSnapshot;
+import dev.ikm.komet.framework.observable.ObservableSemanticVersion;
 import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.events.genediting.GenEditingEvent;
 import dev.ikm.komet.kview.klfields.KlFieldHelper;
@@ -33,12 +38,14 @@ import dev.ikm.tinkar.common.service.TinkExecutor;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
 import dev.ikm.tinkar.entity.Entity;
+import dev.ikm.tinkar.entity.FieldRecord;
 import dev.ikm.tinkar.entity.SemanticEntityVersion;
 import dev.ikm.tinkar.entity.SemanticVersionRecord;
 import dev.ikm.tinkar.entity.StampRecord;
 import dev.ikm.tinkar.entity.transaction.CommitTransactionTask;
 import dev.ikm.tinkar.entity.transaction.Transaction;
 import dev.ikm.tinkar.terms.EntityFacade;
+import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -53,6 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class SemanticFieldsController {
@@ -81,15 +89,16 @@ public class SemanticFieldsController {
 
     private int committedHash;
 
-    private void enableDisableSubmitButton(Object value){
-//        TODO: To be able to test the component control placeholder I'm temporarily commenting this block of code below.
-//        TODO: We should uncommet it once component control placeholder is merged and tested.
+    ObservableSemantic observableSemantic;
 
-//        if(value != null && !value.toString().isEmpty()) {
-//            enableDisableSubmitButton();
-//        }else {
-//            submitButton.setDisable(true);
-//        }
+    ObservableSemanticSnapshot observableSemanticSnapshot;
+
+    private void enableDisableSubmitButton(Object value){
+        if(value != null && !value.toString().isEmpty()) {
+            enableDisableSubmitButton();
+        }else {
+            submitButton.setDisable(true);
+        }
     }
 
     private void enableDisableSubmitButton(){
@@ -107,9 +116,9 @@ public class SemanticFieldsController {
         // This flag is used to avoid unnecessary calling for
         // method when value for other listeners is updated.
         // It is similar to refreshProperty in Observable interface.
-        if(updateStampVersions){
+     /*   if(updateStampVersions){
             updateStampVersionsNidsForAllFields();
-        }
+        }*/
     };
 
     @FXML
@@ -118,36 +127,24 @@ public class SemanticFieldsController {
         editFieldsVBox.setSpacing(8.0);
         editFieldsVBox.getChildren().clear();
         updateStampVersions = true;
-        // TODO: To be able to test the component control placeholder I'm temporarily setting submit button to being enabled
-        // TODO: We should set it to disabled here again once component control placeholder is merged and tested.
-        submitButton.setDisable(false);
+        submitButton.setDisable(true);
         EntityFacade semantic = semanticFieldsViewModel.getPropertyValue(SEMANTIC);
+        observableSemantic = ObservableEntity.get(semantic.nid());
+        observableSemanticSnapshot = observableSemantic.getSnapshot(getViewProperties().calculator());
         if (semantic != null) {
-            StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
-            Latest<SemanticEntityVersion> semanticEntityVersionLatest = stampCalculator.latest(semantic.nid());
-            if (semanticEntityVersionLatest.isPresent()) {
                 //Set the hascode for the committed values.
                 processCommittedValues();
-
-                // Populate the Semantic Details
-                // Displaying editable controls and populating the observable fields array list.
-                observableFields.addAll(KlFieldHelper
-                        .generateObservableFieldsAndNodes(getViewProperties(),
-                                nodes,
-                                semanticEntityVersionLatest, true));
-                editFieldsVBox.getChildren().clear();
-                observableFields.forEach(observableField -> {
-                 observableField.valueProperty()
-                                        .subscribe(value -> {
-                                            enableDisableSubmitButton(value);
-                                        });
-                    //Add listener for fieldProperty of each field to check when data is modified.
-                    observableField.fieldProperty().addListener(observable -> fieldPropertyChangeListner());
-                });
-
-             } else {
-                // TODO Add a new semantic based on a pattern (blank fields).
-            }
+                loadUIData();
+                observableSemantic.versionProperty().addListener((ListChangeListener<? super ObservableSemanticVersion>) listChangeListener -> {
+                while(listChangeListener.next()){
+                    if(listChangeListener.wasPermutated()){
+                        System.out.println(" THE VALUE CHANGED... listChangeListener.wasPermutated()");
+                    }
+                    if(listChangeListener.wasAdded()){
+                        System.out.println(" THE VALUE ADDED..." + listChangeListener.getAddedSubList().getFirst().fieldValues());
+                    }
+                }
+            });
         }
 
         // subscribe to changes... if the FIELD_INDEX is -1 or unset, then the user clicked the
@@ -171,6 +168,27 @@ public class SemanticFieldsController {
                 }
             }
         });
+    }
+
+    private void loadUIData() {
+        StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
+        Latest<SemanticEntityVersion> semanticEntityVersionLatest = stampCalculator.latest(observableSemantic.nid());
+        if (semanticEntityVersionLatest.isPresent()) {
+            // Populate the Semantic Details
+            // Displaying editable controls and populating the observable fields array list.
+            observableFields.addAll((Collection) observableSemanticSnapshot.getLatestFields().get());
+            observableFields.forEach(observableField -> {
+                FieldRecord<?> fieldRecord = observableField.field();
+                nodes.add(KlFieldHelper.generateNode(fieldRecord, observableField, getViewProperties(), semanticEntityVersionLatest, true));
+                //enable disable submit button.
+                observableField.valueProperty()
+                        .subscribe(value -> {
+                            enableDisableSubmitButton(value);
+                        });
+                //Add listener for fieldProperty of each field to check when data is modified.
+                observableField.fieldProperty().addListener(observable -> updateVersions(Entity.getFast(observableSemantic.nid()), observableSemantic));
+            });
+        }
     }
 
     /***
