@@ -116,9 +116,9 @@ public class SemanticFieldsController {
         // This flag is used to avoid unnecessary calling for
         // method when value for other listeners is updated.
         // It is similar to refreshProperty in Observable interface.
-     /*   if(updateStampVersions){
-            updateStampVersionsNidsForAllFields();
-        }*/
+        if(updateStampVersions){
+        //    updateStampVersionsNidsForAllFields();
+        }
     };
 
     @FXML
