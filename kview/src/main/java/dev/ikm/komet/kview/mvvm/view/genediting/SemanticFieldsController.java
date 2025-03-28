@@ -132,6 +132,9 @@ public class SemanticFieldsController {
         observableSemantic = ObservableEntity.get(semantic.nid());
         observableSemanticSnapshot = observableSemantic.getSnapshot(getViewProperties().calculator());
         if (semantic != null) {
+            StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
+            Latest<SemanticEntityVersion> semanticEntityVersionLatest = stampCalculator.latest(semantic.nid());
+            if (semanticEntityVersionLatest.isPresent()) {
                 //Set the hascode for the committed values.
                 processCommittedValues();
                 loadUIData();
