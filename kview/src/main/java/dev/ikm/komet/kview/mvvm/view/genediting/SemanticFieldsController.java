@@ -29,6 +29,7 @@ import dev.ikm.komet.framework.observable.ObservableEntity;
 import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.observable.ObservableSemantic;
 import dev.ikm.komet.framework.observable.ObservableSemanticSnapshot;
+import dev.ikm.komet.framework.observable.ObservableSemanticVersion;
 import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.events.genediting.GenEditingEvent;
 import dev.ikm.komet.kview.klfields.KlFieldHelper;
@@ -113,11 +114,11 @@ public class SemanticFieldsController {
         committedHash = generateHashValue(semanticEntityVersionLatest, getViewProperties());
     }
 
-  /*  private ObservableVersion<?> retrieveObservableSemanticVersion(Latest<SemanticEntityVersion> semanticEntityVersionLatest, ObservableSemantic observableSemantic) {
+    private ObservableSemanticVersion retrieveObservableSemanticVersion() {
         ObservableSemanticSnapshot observableSemanticSnapshot = observableSemantic.getSnapshot(getViewProperties().calculator());
         Latest<ObservableSemanticVersion> observableSemanticVersionLatest = observableSemanticSnapshot.getLatestVersion();
         return observableSemanticVersionLatest.get();
-    }*/
+    }
 
     @FXML
     private void initialize() {
@@ -177,6 +178,8 @@ public class SemanticFieldsController {
                             enableDisableSubmitButton(value);
                             if(!submitButton.isDisabled()){
                                 observableSemantic.createNewVersionAndTransaction(observableField.value(), observableField.fieldIndex(), getViewProperties().calculator());
+                                // Below approach is for implementing writeToDatabase in SemanticVersion.
+                                //               retrieveObservableSemanticVersion().writeToDataBase(value, observableField.fieldIndex());
                             }else {
                                 //TODO write method to remove any transactions and revert back to the committed values.
                                 //   observableSemantic.removeVersion(observableField.value(), observableField.fieldIndex(), retrieveObservableSemanticVersion(semanticEntityVersionLatest));

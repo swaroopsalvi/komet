@@ -99,17 +99,7 @@ public final class ObservableSemanticVersion
             // Entity provider will broadcast the nid of the changed entity.
             Entity.provider().putEntity(analogue);
         }else {
-            SemanticVersionRecord newVersion = null;
-            System.out.println("Entity.getStamp(version().stampNid()).publicId() : " + Entity.getStamp(version().stampNid()).publicId());
-            System.out.println("IS EMPTY : " + Transaction.forStamp(Entity.getStamp(version().stampNid()).publicId()).isEmpty());
-            if(Transaction.forStamp(Entity.getStamp(version().stampNid()).publicId()).isEmpty()){
-                Transaction t = Transaction.make();
-                // newStamp already written to the entity store.
-                StampEntity newStamp = t.getStampForEntities(stamp.state(), stamp.authorNid(), stamp.moduleNid(), stamp.pathNid(), entity());
-                newVersion = version().withFieldValues(fieldsForNewVersion.toImmutable()).withStampNid(newStamp.nid());
-            }else{
-                newVersion = version().withFieldValues(fieldsForNewVersion.toImmutable());
-            }
+            SemanticVersionRecord newVersion =  version().withFieldValues(fieldsForNewVersion.toImmutable());
             // if a version with the same stamp as newVersion exists, that version will be removed
             // prior to adding the new version so you don't get duplicate versions with the same stamp.
             SemanticRecord analogue = semantic.with(newVersion).build();
