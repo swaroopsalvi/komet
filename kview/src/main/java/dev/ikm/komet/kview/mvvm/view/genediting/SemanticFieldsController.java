@@ -30,7 +30,6 @@ import dev.ikm.komet.framework.observable.ObservableEntity;
 import dev.ikm.komet.framework.observable.ObservableField;
 import dev.ikm.komet.framework.observable.ObservableSemantic;
 import dev.ikm.komet.framework.observable.ObservableSemanticSnapshot;
-import dev.ikm.komet.framework.observable.ObservableSemanticVersion;
 import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.events.genediting.GenEditingEvent;
 import dev.ikm.komet.kview.klfields.KlFieldHelper;
@@ -45,7 +44,6 @@ import dev.ikm.tinkar.entity.StampRecord;
 import dev.ikm.tinkar.entity.transaction.CommitTransactionTask;
 import dev.ikm.tinkar.entity.transaction.Transaction;
 import dev.ikm.tinkar.terms.EntityFacade;
-import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -108,7 +106,11 @@ public class SemanticFieldsController {
 
     private void processCommittedValues() {
         EntityFacade semantic = semanticFieldsViewModel.getPropertyValue(SEMANTIC);
-        Latest<SemanticEntityVersion> semanticEntityVersionLatest = retrieveCommittedLatestVersion(semantic,getViewProperties());
+        StampCalculator stampCalculator = getViewProperties().calculator().stampCalculator();
+        Latest<SemanticEntityVersion> semanticEntityVersionLatest = stampCalculator.latest(semantic.nid());
+        if(semanticEntityVersionLatest.get().stamp().time() == Long.MAX_VALUE){
+            semanticEntityVersionLatest = retrieveCommittedLatestVersion(semanticEntityVersionLatest, observableSemanticSnapshot);
+        }
         committedHash = generateHashValue(semanticEntityVersionLatest, getViewProperties());
     }
 
@@ -135,16 +137,6 @@ public class SemanticFieldsController {
                 //Set the hascode for the committed values.
                 processCommittedValues();
                 loadUIData();
-                observableSemantic.versionProperty().addListener((ListChangeListener<? super ObservableSemanticVersion>) listChangeListener -> {
-                while(listChangeListener.next()){
-                    if(listChangeListener.wasPermutated()){
-                        System.out.println(" THE VALUE CHANGED... listChangeListener.wasPermutated()");
-                    }
-                    if(listChangeListener.wasAdded()){
-                        System.out.println(" THE VALUE ADDED..." + listChangeListener.getAddedSubList().getFirst().fieldValues());
-                    }
-                }
-            });
         }
 
         // subscribe to changes... if the FIELD_INDEX is -1 or unset, then the user clicked the
@@ -186,7 +178,16 @@ public class SemanticFieldsController {
                             enableDisableSubmitButton(value);
                         });
                 //Add listener for fieldProperty of each field to check when data is modified.
-                observableField.fieldProperty().addListener(observable -> updateVersions(Entity.getFast(observableSemantic.nid()), observableSemantic));
+                observableField.fieldProperty().addListener(observable -> {
+                            updateVersions(Entity.getFast(observableSemantic.nid()), observableSemantic);
+                            // fire refreshEvent
+//                            EvtBusFactory.getDefaultEvtBus()
+//                                    .publish(semanticFieldsViewModel.getPropertyValue(WINDOW_TOPIC),
+//                                            new PropertyPanelEvent(this,
+//                                                    SHOW_EDIT_SEMANTIC_FIELDS, semanticFieldsViewModel.getPropertyValue(SEMANTIC)));
+//                            // open properties bump out.
+//                            EvtBusFactory.getDefaultEvtBus().publish(semanticFieldsViewModel.getPropertyValue(WINDOW_TOPIC), new PropertyPanelEvent(this, OPEN_PANEL));
+                        });
             });
         }
     }
