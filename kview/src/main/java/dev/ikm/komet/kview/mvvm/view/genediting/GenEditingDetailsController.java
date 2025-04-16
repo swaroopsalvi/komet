@@ -67,12 +67,10 @@ import dev.ikm.tinkar.coordinate.language.calculator.LanguageCalculator;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
 import dev.ikm.tinkar.entity.ConceptEntity;
-import dev.ikm.tinkar.entity.EntityService;
 import dev.ikm.tinkar.entity.EntityVersion;
 import dev.ikm.tinkar.entity.FieldRecord;
 import dev.ikm.tinkar.entity.PatternEntityVersion;
 import dev.ikm.tinkar.entity.PatternVersionRecord;
-import dev.ikm.tinkar.entity.SemanticEntity;
 import dev.ikm.tinkar.entity.SemanticEntityVersion;
 import dev.ikm.tinkar.entity.StampEntity;
 import dev.ikm.tinkar.terms.ConceptFacade;
@@ -264,8 +262,7 @@ public class GenEditingDetailsController {
 
         // Populate the Semantic Details
 
-        // populate the observable fields and nodes for this semantic
-        loadUIData();
+
         if (genEditingViewModel.getPropertyValue(MODE).equals(EDIT)) {
             setUpObservables();
         } else {
@@ -282,11 +279,12 @@ public class GenEditingDetailsController {
 
         //Set up the Listener to refresh the details area (After user hits submit button on the right side)
         EntityFacade finalSemantic = semantic;
+        Latest<SemanticEntityVersion> latestSemanticEntityVersion = getViewProperties().calculator().stampCalculator().latest(semantic.nid());
         Subscriber<GenEditingEvent> refreshSubscriber = evt -> {
             if (evt.getEventType() == GenEditingEvent.PUBLISH && evt.getNid() == finalSemantic.nid()) {
                 if (genEditingViewModel.getPropertyValue(MODE).equals(CREATE)) {
                     // populate the semantic and its observable fields once saved
-                    semanticEntityVersionLatest = retrieveCommittedLatestVersion(finalSemantic, getViewProperties());
+                    semanticEntityVersionLatest = retrieveCommittedLatestVersion(latestSemanticEntityVersion, observableSemantic.getSnapshot(getViewProperties().calculator()));
 
                     // clear out the temporary placeholders
                     semanticDetailsVBox.getChildren().clear();
@@ -347,11 +345,7 @@ public class GenEditingDetailsController {
     }
     private void setUpObservables() {
         // populate the observable fields and nodes for this semantic
-        observableFields.addAll(KlFieldHelper
-                .generateObservableFieldsAndNodes(getViewProperties(),
-                        nodes,
-                        semanticEntityVersionLatest, false));
-
+        loadUIData();
         // function to apply for the components' edit action (a.k.a. right click > Edit)
         BiFunction<Node, Integer, Runnable> editAction = (node, fieldIndex) ->
                 () -> {

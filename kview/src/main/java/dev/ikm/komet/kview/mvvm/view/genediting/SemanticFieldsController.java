@@ -168,7 +168,9 @@ public class SemanticFieldsController {
                 if(evt.getNid() == semantic.nid()){
                     observableSemantic = ObservableSemantic.get(semantic.nid());
                     observableSemanticSnapshot = observableSemantic.getSnapshot(getViewProperties().calculator());
-                    loadUIData();
+                    if(!editFieldsVBox.isFocused()){
+                        loadUIData();
+                    }
                 }
         };
         EvtBusFactory.getDefaultEvtBus().subscribe(VERSION_CHANGED_TOPIC,
