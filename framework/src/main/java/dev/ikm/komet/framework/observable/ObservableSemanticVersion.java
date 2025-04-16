@@ -40,6 +40,8 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MutableMap;
 
+import java.util.Objects;
+
 public final class ObservableSemanticVersion
         extends ObservableVersion<SemanticVersionRecord>
         implements SemanticEntityVersion {
@@ -90,13 +92,13 @@ public final class ObservableSemanticVersion
 
             // create a change listener
             InvalidationListener autoSave = (observableValue) -> {
-        //    ChangeListener autoSave = (observableValue, ov, nv) -> {
+
                 System.out.println("Inside AUTOSAVE Method.");
-//                if (nv !=null) {
+
                 if(observableField.value() != null // Create a version only when new value is not null.
-//                 &&        (observableField.fieldProperty.getValue().value() != null &&  // If the old
-//                                // Check if the previous value is different from changed.This check is required for C-List C-Set
-//                                !Objects.equals(observableField.value().toString(), observableField.fieldProperty.getValue().value().toString()))
+                 &&        (observableField.fieldProperty.getValue().value() != null &&  // If the old
+                                // Check if the previous value is different from changed.This check is required for C-List C-Set
+                                !Objects.equals(observableField.value().toString(), observableField.fieldProperty.getValue().value().toString()))
                 ) {
                     manageEntityVersion(observableField.value(), index);
                 }
