@@ -160,7 +160,6 @@ public class SemanticFieldsController {
         observableSemantic = ObservableEntity.get(semantic.nid());
         observableSemanticSnapshot = observableSemantic.getSnapshot(getViewProperties().calculator());
         processCommittedValues();
-
         loadUIData();
 
         entityVersionChangeEventSubscriber = evt ->{
@@ -168,9 +167,7 @@ public class SemanticFieldsController {
                 if(evt.getNid() == semantic.nid()){
                     observableSemantic = ObservableSemantic.get(semantic.nid());
                     observableSemanticSnapshot = observableSemantic.getSnapshot(getViewProperties().calculator());
-                    if(!editFieldsVBox.isFocused()){
-                        loadUIData();
-                    }
+                    loadUIData();
                 }
         };
         EvtBusFactory.getDefaultEvtBus().subscribe(VERSION_CHANGED_TOPIC,
