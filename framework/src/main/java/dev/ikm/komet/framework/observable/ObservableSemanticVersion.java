@@ -125,7 +125,6 @@ public final class ObservableSemanticVersion
             StampEntity<?> newStamp = t.getStampForEntities(stamp.state(), stamp.authorNid(), stamp.moduleNid(), stamp.pathNid(), entity());
             versionProperty.set(version.with().stampNid(newStamp.nid()).build());
         }
-
     }
 
     private void manageEntityVersion(Object value, int index) {

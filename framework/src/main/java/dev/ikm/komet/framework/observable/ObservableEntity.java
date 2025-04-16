@@ -67,11 +67,19 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
 
     final private AtomicReference<Entity<V>> entityReference;
 
-    public void saveToDB(Entity<?> analogue, EntityVersion newVersionRecord ) {
+    public void saveToDB(Entity<?> analogue, EntityVersion newVersionRecord) {
         Entity.provider().putEntity(analogue);
-        versionProperty.add(wrap((V)newVersionRecord));
+        versionProperty.add(wrap((V) newVersionRecord));
         EvtBusFactory.getDefaultEvtBus()
                 .publish(VERSION_CHANGED_TOPIC, new EntityVersionChangeEvent(this, EntityVersionChangeEvent.VERSION_UPDATED, newVersionRecord));
+    }
+
+    private void refreshVersionProperty() {
+        Entity<V> entity = Entity.provider().getEntityFast(nid());
+        for (EntityVersion version : entity.versions().stream().sorted((v1, v2) ->
+                Long.compare(v1.stamp().time(), v2.stamp().time())).toList()) {
+            this.versionProperty.add(this.wrap((V) version));
+        }
     }
 
     ObservableEntity(Entity<V> entity) {
@@ -119,11 +127,11 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
                     case StampEntity stampEntity -> new ObservableStamp(stampEntity);
                     default -> throw new UnsupportedOperationException("Can't handle: " + entity);
                 });
-        if (!Platform.isFxApplicationThread()) {
+      /*  if (!Platform.isFxApplicationThread()) {
             Platform.runLater(() -> updateVersions(entity, observableEntity));
         } else {
             updateVersions(entity, observableEntity);
-        }
+        }*/
         return (OE) observableEntity;
     }
 

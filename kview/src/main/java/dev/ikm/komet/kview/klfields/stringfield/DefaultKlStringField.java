@@ -16,7 +16,6 @@ public class DefaultKlStringField extends BaseDefaultKlField<String> implements 
         Parent node;
         if (isEditable) {
             KLStringControl stringControl = new KLStringControl();
-
             stringControl.textProperty().bindBidirectional(observableStringField.valueProperty());
             stringControl.setTitle(getTitle());
 
