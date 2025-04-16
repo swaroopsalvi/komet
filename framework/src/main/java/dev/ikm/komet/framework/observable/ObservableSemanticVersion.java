@@ -32,7 +32,7 @@ import dev.ikm.tinkar.entity.StampEntity;
 import dev.ikm.tinkar.entity.StampRecord;
 import dev.ikm.tinkar.entity.transaction.Transaction;
 import dev.ikm.tinkar.terms.TinkarTerm;
-import javafx.beans.value.ChangeListener;
+import javafx.beans.InvalidationListener;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.ImmutableList;
@@ -89,8 +89,8 @@ public final class ObservableSemanticVersion
 
 
             // create a change listener
-        //    InvalidationListener autoSave = (observableValue) -> {
-            ChangeListener autoSave = (observableValue, ov, nv) -> {
+            InvalidationListener autoSave = (observableValue) -> {
+        //    ChangeListener autoSave = (observableValue, ov, nv) -> {
                 System.out.println("Inside AUTOSAVE Method.");
 //                if (nv !=null) {
                 if(observableField.value() != null // Create a version only when new value is not null.
