@@ -20,6 +20,7 @@ import static dev.ikm.komet.framework.events.FrameworkTopics.VERSION_CHANGED_TOP
 import dev.ikm.komet.framework.events.EntityVersionChangeEvent;
 import dev.ikm.komet.framework.events.EvtBusFactory;
 import dev.ikm.tinkar.collection.ConcurrentReferenceHashMap;
+import dev.ikm.tinkar.common.id.PublicId;
 import dev.ikm.tinkar.common.service.PrimitiveData;
 import dev.ikm.tinkar.common.util.broadcast.Subscriber;
 import dev.ikm.tinkar.component.FieldDataType;
@@ -77,8 +78,9 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
      * @param analogue the entity record
      * @param newVersionRecord entity version record
      */
-    public void saveToDB(Entity<?> analogue, EntityVersion newVersionRecord ) {
+    public void saveToDB(Entity<?> analogue, EntityVersion newVersionRecord , EntityVersion oldVersionRecord) {
         Entity.provider().putEntity(analogue);
+        versionProperty.remove(oldVersionRecord);
         versionProperty.add(wrap((V)newVersionRecord));
         EvtBusFactory.getDefaultEvtBus()
                 .publish(VERSION_CHANGED_TOPIC, new EntityVersionChangeEvent(this, VERSION_UPDATED, newVersionRecord));
@@ -142,12 +144,40 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
      * @param entity
      * @param observableEntity
      */
-    public static void updateVersions(Entity<? extends EntityVersion> entity, ObservableEntity observableEntity) {
+    public static void updateVersions0(Entity<? extends EntityVersion> entity, ObservableEntity observableEntity) {
         if (!((Entity) observableEntity.entityReference.get()).versions().equals(entity.versions())) {
             observableEntity.entityReference.set(entity);
             observableEntity.versionProperty.clear();
             for (EntityVersion version : entity.versions().stream().sorted((v1, v2) ->
                     Long.compare(v1.stamp().time(), v2.stamp().time())).toList()) {
+                observableEntity.versionProperty.add(observableEntity.wrap(version));
+            }
+        }
+    }
+
+    /**
+     * updates the versions in the versionProperty list.
+     * @param entity
+     * @param observableEntity
+     */
+    public static void updateVersions(Entity<? extends EntityVersion> entity, ObservableEntity observableEntity) {
+        //update the entityReference in the singleton observableEntity.
+        if (!((Entity) observableEntity.entityReference.get()).versions().equals(entity.versions())) {
+            observableEntity.entityReference.set(entity);
+        }
+
+        for (EntityVersion version : entity.versions().stream().sorted((v1, v2) ->
+                Long.compare(v1.stamp().time(), v2.stamp().time())).toList()) {
+            boolean versionPresent = false;
+            for(Object object: observableEntity.versionProperty.get()){
+                if(object instanceof ObservableVersion<?> observableVersion){
+                    if(PublicId.equals(observableVersion.stamp().publicId(), version.stamp().publicId())){
+                        versionPresent = true;
+                        break;
+                    }
+                }
+            }
+            if(!versionPresent){
                 observableEntity.versionProperty.add(observableEntity.wrap(version));
             }
         }
