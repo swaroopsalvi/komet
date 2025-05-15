@@ -109,8 +109,12 @@ public class KLComponentControl extends Control {
      */
     private final ObjectProperty<EntityProxy> entityProperty = new SimpleObjectProperty<>(this, "entity", null);
     public final ObjectProperty<EntityProxy> entityProperty() { return entityProperty; }
-    public final EntityProxy getEntity() { return entityProperty.get(); }
-    public final void setEntity(EntityProxy value) { entityProperty.set(value); }
+    public final EntityProxy getEntity() {
+        return EntityProxy.make(entityProperty.get().nid());
+    }
+    public final void setEntity(EntityProxy value) {
+        entityProperty.set(EntityProxy.make(value.nid()));
+    }
 
     // -- type ahead completer
     /**
