@@ -84,7 +84,6 @@ public class StampEditController extends AbstractBasicController {
     @Override
     public void initialize() {
         clearView();
-
         // When user selects a radio button
         moduleToggleGroup.selectedToggleProperty().addListener((observableValue, toggle, t1) -> {
             ConceptEntity module = (ConceptEntity) t1.getUserData();
@@ -109,7 +108,6 @@ public class StampEditController extends AbstractBasicController {
                 statusTitledPane.setText("Status: " + status.name());
             }
         }));
-
         // setup status modules and path radio button selection
         setupModuleSelections();
         setupPathSelections();
@@ -140,7 +138,6 @@ public class StampEditController extends AbstractBasicController {
         }else {
             inactiveStatus.setSelected(true);
         }
-
     }
 
     private void setupModuleSelections() {
@@ -153,7 +150,6 @@ public class StampEditController extends AbstractBasicController {
             rb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
             rb.setUserData(module);
             rb.setToggleGroup(moduleToggleGroup);
-
             //Set default to development Module, in create mode.
             ConceptEntity moduleEntity = getStampViewModel().getPropertyValue(MODULE) == null ?
                     Entity.provider().getEntityFast(DEVELOPMENT_MODULE.nid()) : getStampViewModel().getPropertyValue(MODULE);
