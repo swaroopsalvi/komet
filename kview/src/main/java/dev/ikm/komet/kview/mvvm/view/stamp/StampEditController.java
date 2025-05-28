@@ -84,10 +84,6 @@ public class StampEditController extends AbstractBasicController {
     @Override
     public void initialize() {
         clearView();
-        // setup status modules and path radio button selection
-        setupModuleSelections();
-        setupPathSelections();
-        setupStatusSelections();
 
         // When user selects a radio button
         moduleToggleGroup.selectedToggleProperty().addListener((observableValue, toggle, t1) -> {
@@ -113,6 +109,11 @@ public class StampEditController extends AbstractBasicController {
                 statusTitledPane.setText("Status: " + status.name());
             }
         }));
+
+        // setup status modules and path radio button selection
+        setupModuleSelections();
+        setupPathSelections();
+        setupStatusSelections();
     }
 
     /**
