@@ -18,7 +18,10 @@ package dev.ikm.komet.kview.mvvm.view.stamp;
 import dev.ikm.komet.kview.mvvm.view.AbstractBasicController;
 import dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel;
 import dev.ikm.tinkar.common.util.text.NaturalOrder;
+import dev.ikm.tinkar.component.Concept;
+import dev.ikm.tinkar.component.ConceptVersion;
 import dev.ikm.tinkar.entity.ConceptEntity;
+import dev.ikm.tinkar.entity.Entity;
 import dev.ikm.tinkar.terms.State;
 import javafx.beans.property.ObjectProperty;
 import javafx.fxml.FXML;
@@ -35,6 +38,8 @@ import java.util.List;
 
 import static dev.ikm.komet.kview.mvvm.viewmodel.StampViewModel.*;
 import static dev.ikm.tinkar.coordinate.stamp.StampFields.*;
+import static dev.ikm.tinkar.terms.TinkarTerm.DEVELOPMENT_MODULE;
+import static dev.ikm.tinkar.terms.TinkarTerm.DEVELOPMENT_PATH;
 
 public class StampEditController extends AbstractBasicController {
 
@@ -129,6 +134,12 @@ public class StampEditController extends AbstractBasicController {
     private void setupStatusSelections() {
         inactiveStatus.setUserData(State.INACTIVE);
         activeStatus.setUserData(State.ACTIVE);
+        if (getStampViewModel().getPropertyValue(STATUS) == State.ACTIVE) {
+            activeStatus.setSelected(true);
+        }else {
+            inactiveStatus.setSelected(true);
+        }
+
     }
 
     private void setupModuleSelections() {
@@ -141,8 +152,11 @@ public class StampEditController extends AbstractBasicController {
             rb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
             rb.setUserData(module);
             rb.setToggleGroup(moduleToggleGroup);
-            ObjectProperty<ConceptEntity> moduleProperty = getStampViewModel().getProperty(MODULE);
-            if (moduleProperty.isNotNull().get() && moduleProperty.get().nid() == module.nid()) {
+
+            //Set default to development Module, in create mode.
+            ConceptEntity moduleEntity = getStampViewModel().getPropertyValue(MODULE) == null ?
+                    Entity.provider().getEntityFast(DEVELOPMENT_MODULE.nid()) : getStampViewModel().getPropertyValue(MODULE);
+            if (moduleEntity.nid() == module.nid()) {
                 rb.setSelected(true);
             }
             moduleVBox.getChildren().add(rb);
@@ -159,8 +173,10 @@ public class StampEditController extends AbstractBasicController {
             rb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
             rb.setUserData(path);
             rb.setToggleGroup(pathToggleGroup);
-            ObjectProperty<ConceptEntity> pathProperty = getStampViewModel().getProperty(PATH);
-            if (pathProperty.isNotNull().get() && pathProperty.get().nid() == path.nid()) {
+            //Set default to development path in create mode.
+            ConceptEntity pathEntity = getStampViewModel().getPropertyValue(PATH) == null ?
+                    Entity.getFast(DEVELOPMENT_PATH.nid()) : getStampViewModel().getPropertyValue(PATH);
+            if (pathEntity.nid() == path.nid()) {
                 rb.setSelected(true);
             }
             pathVBox.getChildren().add(rb);
