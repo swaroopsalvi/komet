@@ -69,12 +69,7 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
         Entity.provider().addSubscriberWithWeakReference(ENTITY_CHANGE_SUBSCRIBER);
     }
 
- //   final SimpleMapProperty<Integer, O> versionPropertyMap = new SimpleMapProperty<>(FXCollections.observableHashMap());
-
     ImmutableMap<Integer, O> immutableVersionPropertyMap =  Maps.immutable.empty();
-
-
-//    final SimpleMapProperty<Integer, O> versionPropertyMap = new SimpleMapProperty<>(FXCollections.observableMap(immutableVersionPropertyMap.toMap()));
 
     final private AtomicReference<Entity<V>> entityReference;
 
@@ -87,8 +82,6 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
     public void saveToDB(Entity<?> analogue, EntityVersion newVersionRecord , EntityVersion oldVersionRecord) {
         Entity.provider().putEntity(analogue);
         replaceVersion(oldVersionRecord, newVersionRecord);
-//        versionPropertyMap.remove(oldVersionRecord.stamp().nid());
-//        versionPropertyMap.put(newVersionRecord.stamp().nid(), wrap((V)newVersionRecord));
         EvtBusFactory.getDefaultEvtBus()
                 .publish(VERSION_CHANGED_TOPIC, new EntityVersionChangeEvent(this, VERSION_UPDATED, newVersionRecord));
     }
@@ -116,7 +109,6 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
         this.entityReference = new AtomicReference<>(entityClone);
         MutableMap<Integer, O> mutableVersionPropertyMap = immutableVersionPropertyMap.toMap();
         for (V version : entity.versions()) {
-//            versionPropertyMap.put(version.stamp().nid(), wrap(version));
             mutableVersionPropertyMap.put(version.stampNid(), wrap((V)version));
         }
         immutableVersionPropertyMap = mutableVersionPropertyMap.toImmutable();
@@ -151,15 +143,17 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
 
         if (!Platform.isFxApplicationThread()) {
             ObservableEntity finalObservableEntity = observableEntity;
-          //  Platform.runLater(() -> updateVersions(entity, finalObservableEntity));
             Platform.runLater(() -> finalObservableEntity.createVersionMap(entity));
         } else {
-         //   updateVersions(entity, observableEntity);
             observableEntity.createVersionMap(entity);
         }
         return (OE) observableEntity;
     }
 
+    /**
+     * updates the versions in the {@code immutableVersionPropertyMap} map
+     * @param entity
+     */
     public void createVersionMap(Entity<? extends EntityVersion> entity){
         MutableMap<Integer, O> mutableVersionPropertyMap = immutableVersionPropertyMap.toMap();
         boolean updateEntityReference = false;
@@ -184,32 +178,6 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
         }
     }
 
-//    /**
-//     * updates the versions in the versionProperty list.
-//     * @param entity
-//     * @param observableEntity
-//     */
-//    private synchronized static void updateVersions(Entity<? extends EntityVersion> entity, ObservableEntity observableEntity) {
-//        boolean updateEntityReference = false;
-//        for (EntityVersion version : entity.versions().stream().sorted((v1, v2) ->
-//                Long.compare(v1.stamp().time(), v2.stamp().time())).toList()) {
-//            boolean versionPresent = observableEntity.versionPropertyMap.get().values().stream().anyMatch(obj -> {
-//              if (obj instanceof ObservableVersion<?> observableVersion){
-//                  return observableVersion.stamp().nid() == version.stamp().nid();
-//              }
-//              return false;
-//            });
-//
-//            if(!versionPresent){
-//                observableEntity.versionPropertyMap.put(version.stamp().nid(), observableEntity.wrap(version));
-//                updateEntityReference = true;
-//            }
-//        }
-//        if (updateEntityReference) {
-//            observableEntity.entityReference.set(entity);
-//        }
-//    }
-
     public static <OE extends ObservableEntity> OE get(int nid) {
         return get(Entity.getFast(nid));
     }
@@ -220,13 +188,11 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
 
     public SimpleMapProperty<Integer, O> versionPropertyMap() {
         return new SimpleMapProperty<>(FXCollections.observableMap(immutableVersionPropertyMap.toMap()));
-//        return versionPropertyMap;
     }
 
     @Override
     public ImmutableList<O> versions() {
         return immutableVersionPropertyMap.toImmutableList();
-//        return Lists.immutable.ofAll(versionPropertyMap.values());
     }
 
     @Override
