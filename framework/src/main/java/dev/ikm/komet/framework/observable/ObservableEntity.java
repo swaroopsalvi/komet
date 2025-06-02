@@ -238,7 +238,7 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
         @Override
         public void onNext(Integer nid) {
             // Do nothing with item, but request another...
-            if (SINGLETONS.containsKey(PrimitiveData.publicId(nid))) {
+            if (SINGLETONS.containsKey(nid)) {
                 Platform.runLater(() -> {
                     get(Entity.getFast(nid));
                 });
