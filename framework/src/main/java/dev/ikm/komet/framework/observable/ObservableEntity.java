@@ -65,8 +65,6 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
         Entity.provider().addSubscriberWithWeakReference(ENTITY_CHANGE_SUBSCRIBER);
     }
 
-//    final SimpleMapProperty<Integer, O> versionPropertyMap = new SimpleMapProperty<>(FXCollections.observableHashMap());
-
     MutableIntObjectMap<O> versionPropertyMap = new IntObjectHashMap<>();
 
     final private AtomicReference<Entity<V>> entityReference;
@@ -79,7 +77,6 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
      */
     public void saveToDB(Entity<?> analogue, EntityVersion newVersionRecord , EntityVersion oldVersionRecord) {
         Entity.provider().putEntity(analogue);
-        versionPropertyMap.remove(oldVersionRecord.stamp().nid());
         versionPropertyMap.put(newVersionRecord.stamp().nid(), wrap((V)newVersionRecord));
         EvtBusFactory.getDefaultEvtBus()
                 .publish(VERSION_CHANGED_TOPIC, new EntityVersionChangeEvent(this, VERSION_UPDATED, newVersionRecord));
@@ -132,8 +129,10 @@ public abstract sealed class ObservableEntity<O extends ObservableVersion<V>, V 
         }
 
         if (!Platform.isFxApplicationThread()) {
-            ObservableEntity finalObservableEntity = observableEntity;
-            Platform.runLater(() -> updateVersions(entity, finalObservableEntity));
+            //Throw exception since we need to get the version using JavaFx thread.
+            throw new RuntimeException( "Invalid thread.");
+//            ObservableEntity finalObservableEntity = observableEntity;
+//            Platform.runLater(() -> updateVersions(entity, finalObservableEntity));
         } else {
             updateVersions(entity, observableEntity);
         }

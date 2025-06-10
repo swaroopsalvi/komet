@@ -106,7 +106,7 @@ public final class ObservableSemanticVersion
         }
 
        //TODO POC this is a temp workaround remove call to handleUncommittedVersionTransactionStatus()?
-        handleUncommittedVersionTransactionStatus();
+    //    handleUncommittedVersionTransactionStatus();
         return Lists.immutable.of(fieldArray);
     }
 
