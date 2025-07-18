@@ -18,6 +18,9 @@ package dev.ikm.komet.rules.actions.axiom;
 import dev.ikm.komet.framework.EditedConceptTracker;
 import dev.ikm.komet.framework.events.AxiomChangeEvent;
 import dev.ikm.komet.framework.events.EvtBusFactory;
+import dev.ikm.komet.framework.observable.ObservableEntity;
+import dev.ikm.komet.framework.observable.ObservableSemantic;
+import dev.ikm.komet.framework.observable.ObservableSemanticVersion;
 import dev.ikm.komet.framework.panel.axiom.AxiomSubjectRecord;
 import dev.ikm.tinkar.entity.graph.adaptor.axiom.LogicalExpression;
 import dev.ikm.komet.rules.actions.AbstractActionSuggested;
@@ -68,31 +71,60 @@ public abstract class AbstractAxiomAction extends AbstractActionSuggested {
     }
     protected void putUpdatedDiTree(AxiomSubjectRecord axiomSubjectRecord, EditCoordinateRecord editCoordinate, DiTreeEntity newTree) {
         SemanticRecord semanticContainingAxiom = Entity.getFast(axiomSubjectRecord.semanticContainingAxiom().nid());
-        Optional<Transaction> optionalTransaction = Transaction.forVersion(axiomSubjectRecord.semanticContainingAxiom().version());
-        Transaction transaction;
-        if (optionalTransaction.isPresent()) {
-            transaction = optionalTransaction.get();
-        } else {
-            transaction = Transaction.make();
-            transaction.addComponent(axiomSubjectRecord.semanticContainingAxiom().nid());
-        }
 
-        Latest<PatternEntityVersion> latestAxiomPatternVersion = viewCalculator.latestPatternEntityVersion(axiomSubjectRecord.semanticContainingAxiom().patternNid());
-        latestAxiomPatternVersion.ifPresentOrElse(patternEntityVersion -> {
-            StampEntity stampEntity = transaction.getStamp(State.ACTIVE, Long.MAX_VALUE,
-                    editCoordinate.getAuthorNidForChanges(),
-                    axiomSubjectRecord.semanticContainingAxiom().moduleNid(),
-                    axiomSubjectRecord.semanticContainingAxiom().pathNid());
-            SemanticVersionRecord newSemanticVersion = new SemanticVersionRecord(semanticContainingAxiom, stampEntity.nid(), Lists.immutable.of(newTree));
-            SemanticRecord analogue = semanticContainingAxiom.with(newSemanticVersion).build();
-            Entity.provider().putEntity(analogue);
-            // Incremental reasoner
-        	LOG.info(">>>>>" + "putUpdatedDiTree" + newSemanticVersion);
-            EditedConceptTracker.addEdit(newSemanticVersion);
-            //TODO need to surface transactions in the journal, then turn off this "auto commit"...
-            transaction.commit();
-        }, () -> {
-            throw new IllegalStateException("No latest pattern version for: " + Entity.getFast(TINKAR_BASE_MODEL_COMPONENT_PATTERN));
-        });
+        ///
+        SemanticVersionRecord newVersion = null;
+        ObservableSemantic observableSemantic = ObservableEntity.get(semanticContainingAxiom.nid());
+        ObservableSemanticVersion observableSemanticVersion = observableSemantic.getSnapshot(viewCalculator).getLatestVersion().get();
+
+        SemanticVersionRecord version = observableSemanticVersion.version();
+        StampRecord stamp = Entity.getStamp(version.stampNid());
+        Optional<Transaction> optionalTransaction = Transaction.forVersion(version);
+        Transaction transaction = null;
+        if (version.committed() || optionalTransaction.isEmpty()) {
+            transaction = Transaction.make();
+            // newStamp already written to the entity store.
+            StampEntity<?> newStamp = transaction.getStampForEntities(stamp.state(), stamp.authorNid(), stamp.moduleNid(), stamp.pathNid(), observableSemanticVersion.entity());
+            // Create new version...
+            newVersion = version.with().fieldValues(Lists.immutable.of(newTree)).stampNid(newStamp.nid()).build();
+
+        } else {
+            newVersion = version.withFieldValues(Lists.immutable.of(newTree));
+        }
+        SemanticRecord semantic = Entity.getFast(newVersion.nid());
+        SemanticRecord analogue = semantic.with(newVersion).build();
+        Entity.provider().putEntity(analogue);
+        transaction.commit();
+        LOG.info(">>>>>" + "putUpdatedDiTree" + newVersion);
+        EvtBusFactory.getDefaultEvtBus().publish(RULES_TOPIC, new AxiomChangeEvent(ChangeSetType.class, AxiomChangeEvent.ANY_CHANGE));
+        EditedConceptTracker.addEdit(newVersion);
+//////        ///
+
+//        Optional<Transaction> optionalTransaction = Transaction.forVersion(axiomSubjectRecord.semanticContainingAxiom().version());
+//        Transaction transaction;
+//        if (optionalTransaction.isPresent()) {
+//            transaction = optionalTransaction.get();
+//        } else {
+//            transaction = Transaction.make();
+//            transaction.addComponent(axiomSubjectRecord.semanticContainingAxiom().nid());
+//        }
+
+//        Latest<PatternEntityVersion> latestAxiomPatternVersion = viewCalculator.latestPatternEntityVersion(axiomSubjectRecord.semanticContainingAxiom().patternNid());
+//        latestAxiomPatternVersion.ifPresentOrElse(patternEntityVersion -> {
+//            StampEntity stampEntity = transaction.getStamp(State.ACTIVE, Long.MAX_VALUE,
+//                    editCoordinate.getAuthorNidForChanges(),
+//                    axiomSubjectRecord.semanticContainingAxiom().moduleNid(),
+//                    axiomSubjectRecord.semanticContainingAxiom().pathNid());
+//            SemanticVersionRecord newSemanticVersion = new SemanticVersionRecord(semanticContainingAxiom, stampEntity.nid(), Lists.immutable.of(newTree));
+//            SemanticRecord analogue = semanticContainingAxiom.with(newSemanticVersion).build();
+//            Entity.provider().putEntity(analogue);
+//            // Incremental reasoner
+//        	LOG.info(">>>>>" + "putUpdatedDiTree" + newSemanticVersion);
+//            EditedConceptTracker.addEdit(newSemanticVersion);
+//            //TODO need to surface transactions in the journal, then turn off this "auto commit"...
+//            transaction.commit();
+//        }, () -> {
+//            throw new IllegalStateException("No latest pattern version for: " + Entity.getFast(TINKAR_BASE_MODEL_COMPONENT_PATTERN));
+//        });
     }
 }

@@ -35,7 +35,9 @@ public class RemoveAxiomAction extends AbstractAxiomAction {
     @Override
     public void doAction(ActionEvent t, AxiomSubjectRecord axiomSubjectRecord, EditCoordinateRecord editCoordinate) {
         DiTreeEntity.Builder treeBuilder = axiomSubjectRecord.axiomTree().removeVertex(axiomSubjectRecord.axiomIndex());
+        LOG.info( "DO ACTION REMOVE AXIOM: axiom INDEX : " + axiomSubjectRecord.axiomIndex() + "  :  BEFORE STRING : " + axiomSubjectRecord.axiomTree());
         DiTreeEntity newTree = treeBuilder.build();
+        LOG.info( "DO ACTION REMOVE AXIOM: AFTER: " + newTree.toString());
         putUpdatedDiTree(axiomSubjectRecord, editCoordinate, newTree);
     }
 }

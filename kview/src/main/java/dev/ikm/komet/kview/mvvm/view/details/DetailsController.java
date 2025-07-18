@@ -1253,7 +1253,7 @@ public class DetailsController  {
      * This will update the EL++ inferred and stated terminological axioms
      */
     private void updateAxioms() {
-
+        inferredAxiomPane.setCenter(null);
         // do not update ui should be blank
         if (getConceptViewModel().getPropertyValue(MODE) == CREATE) {
             return;
