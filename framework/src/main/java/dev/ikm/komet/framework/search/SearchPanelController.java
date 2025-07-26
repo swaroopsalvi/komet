@@ -269,7 +269,6 @@ public class SearchPanelController implements ListChangeListener<TreeItem<Object
                         }
                     });
                 });
-
             });
         ///
         /// This one works...
