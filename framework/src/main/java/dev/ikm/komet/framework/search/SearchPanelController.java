@@ -23,17 +23,25 @@ import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.preferences.KometPreferences;
 import dev.ikm.tinkar.common.alert.AlertObject;
 import dev.ikm.tinkar.common.alert.AlertStreams;
+import dev.ikm.tinkar.common.id.PublicId;
 import dev.ikm.tinkar.common.id.PublicIdStringKey;
 import dev.ikm.tinkar.common.id.PublicIds;
 import dev.ikm.tinkar.common.service.PrimitiveData;
 import dev.ikm.tinkar.common.service.TinkExecutor;
 import dev.ikm.tinkar.common.util.text.NaturalOrder;
 import dev.ikm.tinkar.common.util.uuid.UuidUtil;
+import dev.ikm.tinkar.component.Concept;
+import dev.ikm.tinkar.coordinate.language.LanguageCoordinateRecord;
 import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.coordinate.stamp.calculator.LatestVersionSearchResult;
+import dev.ikm.tinkar.entity.Entity;
+import dev.ikm.tinkar.entity.EntityService;
 import dev.ikm.tinkar.entity.EntityVersion;
+import dev.ikm.tinkar.entity.SemanticEntity;
+import dev.ikm.tinkar.entity.SemanticEntityVersion;
 import dev.ikm.tinkar.terms.EntityFacade;
 import dev.ikm.tinkar.terms.EntityProxy;
+import dev.ikm.tinkar.terms.TinkarTerm;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -54,9 +62,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -245,16 +256,55 @@ public class SearchPanelController implements ListChangeListener<TreeItem<Object
                     () -> Lists.mutable.empty()).add(result);
         }
         for (int topNid : topNidMatchMap.keySet().toArray()) {
-            String topText = viewProperties.nodeView().calculator().getFullyQualifiedDescriptionTextWithFallbackOrNid(topNid);
+            AtomicReference<String> topText = new AtomicReference<>(viewProperties.nodeView().calculator().getFullyQualifiedDescriptionTextWithFallbackOrNid(topNid));
+        // Below is alternate approach.
+            int [] semanticNids = EntityService.get().semanticNidsForComponentOfPattern(topNid, TinkarTerm.DESCRIPTION_PATTERN.nid());
+            viewProperties.calculator().languageCalculator().languageCoordinateList().forEach(languageCoordinateRecord -> {
+                Arrays.stream(semanticNids).forEach( seamanticNid -> {
+                    Latest<SemanticEntityVersion> semanticEntityVersionLatest = viewProperties.nodeView().calculator().latest(seamanticNid);
+                    semanticEntityVersionLatest.ifPresent( semanticEntityVersion -> {
+                        if(PublicId.equals(((Concept) semanticEntityVersion.fieldValues().getLastOptional().get()).publicId(), TinkarTerm.FULLY_QUALIFIED_NAME_DESCRIPTION_TYPE.publicId())
+                            && PublicId.equals(languageCoordinateRecord.languageConcept().publicId(), ((Concept) semanticEntityVersion.fieldValues().get(1)).publicId())){
+                            topText.set(String.valueOf(semanticEntityVersion.fieldValues().get(1)));
+                        }
+                    });
+                });
+
+            });
+        ///
+        /// This one works...
+            Optional<LanguageCoordinateRecord> optionalLanguageCoordinateRecord = viewProperties.calculator().languageCoordinateList().getFirstOptional();
+            if(optionalLanguageCoordinateRecord.isPresent() &&
+                    PublicId.equals(optionalLanguageCoordinateRecord.get().languageConcept().publicId(), TinkarTerm.SPANISH_LANGUAGE.publicId())){
+                int [] semanticNids = EntityService.get().semanticNidsForComponentOfPattern(topNid, TinkarTerm.DESCRIPTION_PATTERN.nid());
+                Arrays.stream(semanticNids).forEach(p -> {
+                    Latest<SemanticEntityVersion> semanticEntityVersionLatest = viewProperties.nodeView().calculator().latest(p);
+                    semanticEntityVersionLatest.ifPresent(semanticEntityVersion -> {
+                        if(PublicId.equals(((Concept) semanticEntityVersion.fieldValues().getLastOptional().get()).publicId(), TinkarTerm.FULLY_QUALIFIED_NAME_DESCRIPTION_TYPE.publicId())
+                            && retriveFieldInformation(semanticEntityVersion.fieldValues().getFirstOptional().get(), optionalLanguageCoordinateRecord.get())) {
+                            topText.set(String.valueOf(semanticEntityVersion.fieldValues().get(1)));
+                        }
+                    });
+                });
+            }
+        /////
             Latest<EntityVersion> latestTopVersion = viewProperties.nodeView().calculator().latest(topNid);
+            String finalTopText = topText.get();
             latestTopVersion.ifPresent(entityVersion -> {
                 TreeItem<Object> topItem = new TreeItem<>();
-                topItem.setValue(new NidTextRecord(topNid, topText, entityVersion.active()));
+                topItem.setValue(new NidTextRecord(topNid, finalTopText, entityVersion.active()));
                 tempRoot.getChildren().add(topItem);
                 topNidMatchMap.get(topNid).forEach(latestVersionSearchResult -> topItem.getChildren().add(new TreeItem<>(latestVersionSearchResult)));
                 topItem.setExpanded(true);
             });
         }
+    }
+
+    private boolean retriveFieldInformation(Object field, LanguageCoordinateRecord languageCoordinateRecord) {
+        if(field instanceof Concept concept) {
+            return  PublicId.equals(languageCoordinateRecord.languageConcept().publicId(), concept.publicId());
+        }
+        return false;
     }
 
     public void doSearch() {
