@@ -16,15 +16,13 @@
 package dev.ikm.komet.kview.mvvm.view.details;
 
 import dev.ikm.komet.framework.Identicon;
+import dev.ikm.komet.framework.observable.*;
+import dev.ikm.tinkar.entity.transaction.Transaction;
 import dev.ikm.tinkar.events.AxiomChangeEvent;
 import dev.ikm.tinkar.events.EvtBus;
 import dev.ikm.tinkar.events.EvtBusFactory;
 import dev.ikm.tinkar.events.Subscriber;
 import dev.ikm.komet.framework.events.appevents.RefreshCalculatorCacheEvent;
-import dev.ikm.komet.framework.observable.ObservableEntity;
-import dev.ikm.komet.framework.observable.ObservableField;
-import dev.ikm.komet.framework.observable.ObservableSemantic;
-import dev.ikm.komet.framework.observable.ObservableSemanticSnapshot;
 import dev.ikm.komet.framework.propsheet.KometPropertySheet;
 import dev.ikm.komet.framework.propsheet.SheetItem;
 import dev.ikm.komet.framework.view.ViewMenuModel;
@@ -1495,9 +1493,12 @@ public class DetailsController  {
         stampViewModel.setPropertyValue(PATHS_PROPERTY, DataModelHelper.fetchDescendentsOfConcept(conceptViewModel.getViewProperties(), TinkarTerm.PATH.publicId()))
                 .setPropertyValue(MODULES_PROPERTY, DataModelHelper.fetchDescendentsOfConcept(conceptViewModel.getViewProperties(), TinkarTerm.MODULE.publicId()));
 
+        EntityFacade entityFacade = getConceptViewModel().getPropertyValue(CURRENT_ENTITY);
         // setup mode
-        if (getConceptViewModel().getPropertyValue(CURRENT_ENTITY) != null) {
+        if (entityFacade != null) {
             stampViewModel.setPropertyValue(MODE, EDIT);
+            stampViewModel.setPropertyValue(CURRENT_ENTITY,  getConceptViewModel().getPropertyValue(CURRENT_ENTITY));
+            stampViewModel.setPropertyValue(VIEW_PROPERTIES, conceptViewModel.getViewProperties());
         } else {
             stampViewModel.setPropertyValue(MODE, CREATE);
         }
@@ -1523,7 +1524,17 @@ public class DetailsController  {
         popOver.setOnHidden(windowEvent -> {
             // set Stamp info into Details form
             getStampViewModel().save();
-            updateUIStamp(getStampViewModel());
+
+            if (entityFacade != null) {
+                ObservableConcept observableConcept = ObservableEntity.get(entityFacade.nid());
+                Latest<ObservableConceptVersion> observableConceptVersionLatest = observableConcept.getSnapshot(conceptViewModel.getViewProperties().calculator()).getLatestVersion();
+                observableConceptVersionLatest.ifPresent(observableConceptVersion -> {
+                   Optional<Transaction> transactionOptional = Transaction.forVersion(observableConceptVersion.version());
+                   transactionOptional.ifPresent(Transaction::commit);
+                });
+            }{
+                updateUIStamp(getStampViewModel());
+            }
         });
 
         popOver.show((Node) event.getSource());

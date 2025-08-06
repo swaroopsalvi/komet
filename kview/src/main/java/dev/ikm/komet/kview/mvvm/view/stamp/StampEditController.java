@@ -15,10 +15,16 @@
  */
 package dev.ikm.komet.kview.mvvm.view.stamp;
 
+import dev.ikm.komet.framework.observable.ObservableConcept;
+import dev.ikm.komet.framework.observable.ObservableConceptVersion;
+import dev.ikm.komet.framework.observable.ObservableEntity;
+import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.mvvm.view.AbstractBasicController;
 import dev.ikm.komet.kview.mvvm.viewmodel.DescrNameViewModel;
 import dev.ikm.tinkar.common.util.text.NaturalOrder;
+import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
 import dev.ikm.tinkar.entity.ConceptEntity;
+import dev.ikm.tinkar.terms.EntityFacade;
 import dev.ikm.tinkar.terms.State;
 import javafx.beans.property.ObjectProperty;
 import javafx.fxml.FXML;
@@ -33,6 +39,7 @@ import org.carlfx.cognitive.viewmodel.ViewModel;
 import java.util.Collections;
 import java.util.List;
 
+import static dev.ikm.komet.kview.mvvm.viewmodel.ConceptViewModel.CURRENT_ENTITY;
 import static dev.ikm.komet.kview.mvvm.viewmodel.StampViewModel.*;
 import static dev.ikm.tinkar.coordinate.stamp.StampFields.*;
 
@@ -83,14 +90,25 @@ public class StampEditController extends AbstractBasicController {
         setupModuleSelections();
         setupPathSelections();
         setupStatusSelections();
+        Latest<ObservableConceptVersion> observableConceptVersionLatest = new Latest<>(); //observableConcept.getSnapshot(getViewProperties().calculator()).getLatestVersion();
+        EntityFacade stampForEntity = getStampViewModel().getPropertyValue(CURRENT_ENTITY);
 
+        if (stampForEntity != null) {
+            ObservableConcept observableConcept = ObservableEntity.get(stampForEntity.nid());
+            observableConceptVersionLatest = observableConcept.getSnapshot(getViewProperties().calculator()).getLatestVersion();
+        }
+        Latest<ObservableConceptVersion> finalObservableConceptVersionLatest = observableConceptVersionLatest;
         // When user selects a radio button
         moduleToggleGroup.selectedToggleProperty().addListener((observableValue, toggle, t1) -> {
             ConceptEntity module = (ConceptEntity) t1.getUserData();
             getStampViewModel().setPropertyValue(MODULE, module);
             if (module != null) {
                 moduleTitledPane.setText("Module: " + module.description());
+                finalObservableConceptVersionLatest.ifPresent(observableConceptVersion -> {
+                    observableConceptVersion.moduleProperty().set(module);
+                });
             }
+
         });
 
         pathToggleGroup.selectedToggleProperty().addListener(((observableValue, toggle, t1) -> {
@@ -98,6 +116,9 @@ public class StampEditController extends AbstractBasicController {
             getStampViewModel().setPropertyValue(PATH, path);
             if (path != null) {
                 pathTitledPane.setText("Path: " + path.description());
+                finalObservableConceptVersionLatest.ifPresent(observableConceptVersion -> {
+                    observableConceptVersion.pathProperty().set(path);
+                });
             }
         }));
 
@@ -106,6 +127,9 @@ public class StampEditController extends AbstractBasicController {
             getStampViewModel().setPropertyValue(STATUS, status);
             if (status != null) {
                 statusTitledPane.setText("Status: " + status.name());
+                finalObservableConceptVersionLatest.ifPresent(observableConceptVersion -> {
+                    observableConceptVersion.stateProperty().set(status);
+                });
             }
         }));
     }
@@ -201,5 +225,10 @@ public class StampEditController extends AbstractBasicController {
 
     @Override
     public void cleanup() {
+    }
+
+    @Override
+    public ViewProperties getViewProperties() {
+        return getStampViewModel().getPropertyValue(VIEW_PROPERTIES);
     }
 }
