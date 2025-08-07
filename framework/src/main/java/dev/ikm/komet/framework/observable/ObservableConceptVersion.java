@@ -43,20 +43,27 @@ public final class ObservableConceptVersion extends ObservableVersion<ConceptVer
     protected void addListeners() {
         ConceptVersionRecord newVersion = null;
         stateProperty.addListener((observable, oldValue, newValue) -> {
-            if (version().uncommitted()) {
-                Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
-                    StampEntity newStamp = transaction.getStamp(newValue, version().time(), version().authorNid(), version().moduleNid(), version().pathNid());
+            if(newValue != null){
+                if (version().uncommitted()) {
+                    Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
+                        StampEntity newStamp = transaction.getStamp(newValue, version().time(), version().authorNid(), version().moduleNid(), version().pathNid());
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    }, () -> {
+                        Transaction t = Transaction.make();
+                        // newStamp already written to the entity store.
+                        StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                        // Create new version...
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    });
+                } else {
+                    Transaction t = Transaction.make();
+                    // newStamp already written to the entity store.
+                    StampEntity<?> newStamp = t.getStampForEntities(newValue, version().authorNid(), version().moduleNid(), version().pathNid(), entity());
+                    // Create new version...
                     versionProperty.set(withStampNid(newStamp.nid()));
-                }, () -> {
-                    throw new IllegalStateException("No transaction for uncommitted version: " + version());
-                });
-            } else {
-                Transaction t = Transaction.make();
-                // newStamp already written to the entity store.
-                StampEntity<?> newStamp = t.getStampForEntities(newValue, version().authorNid(), version().moduleNid(), version().pathNid(), entity());
-                // Create new version...
-                versionProperty.set(withStampNid(newStamp.nid()));
+                }
             }
+
         });
 
         timeProperty.addListener((observable, oldValue, newValue) -> {
@@ -75,53 +82,73 @@ public final class ObservableConceptVersion extends ObservableVersion<ConceptVer
         });
 
         authorProperty.addListener((observable, oldValue, newValue) -> {
-            if (version().uncommitted()) {
-                Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
-                    StampEntity newStamp = transaction.getStamp(version().state(), version().time(), newValue.nid(), version().moduleNid(), version().pathNid());
+            if (newValue !=null ){
+                if (version().uncommitted()) {
+                    Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
+                        StampEntity newStamp = transaction.getStamp(version().state(), version().time(), newValue.nid(), version().moduleNid(), version().pathNid());
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    }, () -> {
+                        Transaction t = Transaction.make();
+                        // newStamp already written to the entity store.
+                        StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                        // Create new version...
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    });
+                } else {
+                    Transaction t = Transaction.make();
+                    // newStamp already written to the entity store.
+                    StampEntity<?> newStamp = t.getStampForEntities(version().state(), newValue.nid(), version().moduleNid(), version().pathNid(), entity());
+                    // Create new version...
                     versionProperty.set(withStampNid(newStamp.nid()));
-                }, () -> {
-                    throw new IllegalStateException("No transaction for uncommitted version: " + version());
-                });
-            } else {
-                Transaction t = Transaction.make();
-                // newStamp already written to the entity store.
-                StampEntity<?> newStamp = t.getStampForEntities(version().state(), newValue.nid(), version().moduleNid(), version().pathNid(), entity());
-                // Create new version...
-                versionProperty.set(withStampNid(newStamp.nid()));
+                }
             }
+
         });
 
         moduleProperty.addListener((observable, oldValue, newValue) -> {
-            if (version().uncommitted()) {
-                Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
-                    StampEntity newStamp = transaction.getStamp(version().state(), version().time(), version().authorNid(), newValue.nid(), version().pathNid());
+            if( newValue != null){
+                if (version().uncommitted()) {
+                    Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
+                        StampEntity newStamp = transaction.getStamp(version().state(), version().time(), version().authorNid(), newValue.nid(), version().pathNid());
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    }, () -> {
+                        Transaction t = Transaction.make();
+                        // newStamp already written to the entity store.
+                        StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                        // Create new version...
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    });
+                } else {
+                    Transaction t = Transaction.make();
+                    // newStamp already written to the entity store.
+                    StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                    // Create new version...
                     versionProperty.set(withStampNid(newStamp.nid()));
-                }, () -> {
-                    throw new IllegalStateException("No transaction for uncommitted version: " + version());
-                });
-            } else {
-                Transaction t = Transaction.make();
-                // newStamp already written to the entity store.
-                StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
-                // Create new version...
-                versionProperty.set(withStampNid(newStamp.nid()));
+                }
             }
+
         });
 
         pathProperty.addListener((observable, oldValue, newValue) -> {
-            if (version().uncommitted()) {
-                Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
-                    StampEntity newStamp = transaction.getStamp(version().state(), version().time(), version().authorNid(), version().moduleNid(), newValue.nid());
+            if( newValue != null){
+                if (version().uncommitted()) {
+                    Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
+                        StampEntity newStamp = transaction.getStamp(version().state(), version().time(), version().authorNid(), version().moduleNid(), newValue.nid());
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    }, () -> {
+                        Transaction t = Transaction.make();
+                        // newStamp already written to the entity store.
+                        StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                        // Create new version...
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    });
+                } else {
+                    Transaction t = Transaction.make();
+                    // newStamp already written to the entity store.
+                    StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), version().moduleNid(), newValue.nid(), entity());
+                    // Create new version...
                     versionProperty.set(withStampNid(newStamp.nid()));
-                }, () -> {
-                    throw new IllegalStateException("No transaction for uncommitted version: " + version());
-                });
-            } else {
-                Transaction t = Transaction.make();
-                // newStamp already written to the entity store.
-                StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), version().moduleNid(), newValue.nid(), entity());
-                // Create new version...
-                versionProperty.set(withStampNid(newStamp.nid()));
+                }
             }
         });
 

@@ -1,5 +1,6 @@
 package dev.ikm.komet.kview.mvvm.viewmodel;
 
+import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.tinkar.component.Stamp;
 import dev.ikm.tinkar.entity.ConceptEntity;
 import dev.ikm.tinkar.terms.EntityFacade;
@@ -41,6 +42,7 @@ public class StampViewModel2 extends FormViewModel {
         addProperty(STATUS, State.ACTIVE);
         addProperty(MODULE, (ConceptEntity) null);
         addProperty(PATH, (ConceptEntity) null);
+        addProperty(VIEW_PROPERTIES, (ViewProperties) null);
 
         // TODO:
 //        addValidator(SAME_AS_PREVIOUS, )

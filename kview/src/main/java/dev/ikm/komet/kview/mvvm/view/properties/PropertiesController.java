@@ -369,7 +369,9 @@ public class PropertiesController implements Serializable {
                               .setPropertyValue(PREV_STAMP, stampEntity)
                               .setPropertyValue(StampViewModel2.StampProperties.STATUS, stampEntity.state())
                               .setPropertyValue(StampViewModel2.StampProperties.MODULE, stampEntity.module())
-                              .setPropertyValue(PATH, stampEntity.path());
+                              .setPropertyValue(PATH, stampEntity.path())
+                              .setPropertyValue(VIEW_PROPERTIES, viewProperties);
+
 
                 stampViewModel.setPropertyValues(MODULES, fetchDescendentsOfConcept(viewProperties, TinkarTerm.MODULE.publicId()))
                               .setPropertyValues(PATHS, fetchDescendentsOfConcept(viewProperties, TinkarTerm.PATH.publicId()))
