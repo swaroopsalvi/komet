@@ -17,6 +17,7 @@ package dev.ikm.komet.framework.observable;
 
 import dev.ikm.tinkar.coordinate.stamp.calculator.StampCalculator;
 import dev.ikm.tinkar.entity.*;
+import dev.ikm.tinkar.entity.transaction.Transaction;
 import dev.ikm.tinkar.terms.TinkarTerm;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.ImmutableMap;
@@ -36,6 +37,125 @@ public final class ObservableConceptVersion extends ObservableVersion<ConceptVer
     public ConceptVersionRecord getVersionRecord() {
         return version();
     }
+
+
+    @Override
+    protected void addListeners() {
+        ConceptVersionRecord newVersion = null;
+        stateProperty.addListener((observable, oldValue, newValue) -> {
+            if(newValue != null){
+                if (version().uncommitted()) {
+                    Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
+                        StampEntity newStamp = transaction.getStamp(newValue, version().time(), version().authorNid(), version().moduleNid(), version().pathNid());
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    }, () -> {
+                        Transaction t = Transaction.make();
+                        // newStamp already written to the entity store.
+                        StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                        // Create new version...
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    });
+                } else {
+                    Transaction t = Transaction.make();
+                    // newStamp already written to the entity store.
+                    StampEntity<?> newStamp = t.getStampForEntities(newValue, version().authorNid(), version().moduleNid(), version().pathNid(), entity());
+                    // Create new version...
+                    versionProperty.set(withStampNid(newStamp.nid()));
+                }
+            }
+
+        });
+
+        timeProperty.addListener((observable, oldValue, newValue) -> {
+            // TODO when to update the chronology with new record? At commit time? Automatically with reactive stream for commits?
+            if (version().uncommitted()) {
+                Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
+                    StampEntity newStamp = transaction.getStamp(version().state(), newValue.longValue(), version().authorNid(), version().moduleNid(), version().pathNid());
+                    versionProperty.set(withStampNid(newStamp.nid()));
+                }, () -> {
+                    throw new IllegalStateException("No transaction for uncommitted version: " + version());
+                });
+            } else {
+                //Are we allowed to change the time and have it autosave ?
+                throw new IllegalStateException("Version is already committed, cannot change value.");
+            }
+        });
+
+        authorProperty.addListener((observable, oldValue, newValue) -> {
+            if (newValue !=null ){
+                if (version().uncommitted()) {
+                    Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
+                        StampEntity newStamp = transaction.getStamp(version().state(), version().time(), newValue.nid(), version().moduleNid(), version().pathNid());
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    }, () -> {
+                        Transaction t = Transaction.make();
+                        // newStamp already written to the entity store.
+                        StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                        // Create new version...
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    });
+                } else {
+                    Transaction t = Transaction.make();
+                    // newStamp already written to the entity store.
+                    StampEntity<?> newStamp = t.getStampForEntities(version().state(), newValue.nid(), version().moduleNid(), version().pathNid(), entity());
+                    // Create new version...
+                    versionProperty.set(withStampNid(newStamp.nid()));
+                }
+            }
+
+        });
+
+        moduleProperty.addListener((observable, oldValue, newValue) -> {
+            if( newValue != null){
+                if (version().uncommitted()) {
+                    Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
+                        StampEntity newStamp = transaction.getStamp(version().state(), version().time(), version().authorNid(), newValue.nid(), version().pathNid());
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    }, () -> {
+                        Transaction t = Transaction.make();
+                        // newStamp already written to the entity store.
+                        StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                        // Create new version...
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    });
+                } else {
+                    Transaction t = Transaction.make();
+                    // newStamp already written to the entity store.
+                    StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                    // Create new version...
+                    versionProperty.set(withStampNid(newStamp.nid()));
+                }
+            }
+
+        });
+
+        pathProperty.addListener((observable, oldValue, newValue) -> {
+            if( newValue != null){
+                if (version().uncommitted()) {
+                    Transaction.forVersion(version()).ifPresentOrElse(transaction -> {
+                        StampEntity newStamp = transaction.getStamp(version().state(), version().time(), version().authorNid(), version().moduleNid(), newValue.nid());
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    }, () -> {
+                        Transaction t = Transaction.make();
+                        // newStamp already written to the entity store.
+                        StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                        // Create new version...
+                        versionProperty.set(withStampNid(newStamp.nid()));
+                    });
+                } else {
+                    Transaction t = Transaction.make();
+                    // newStamp already written to the entity store.
+                    StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), version().moduleNid(), newValue.nid(), entity());
+                    // Create new version...
+                    versionProperty.set(withStampNid(newStamp.nid()));
+                }
+            }
+        });
+
+    }
+
+
+
     @Override
     public ImmutableMap<FieldCategory, ObservableField> getObservableFields() {
         MutableMap<FieldCategory, ObservableField> fieldMap = Maps.mutable.empty();

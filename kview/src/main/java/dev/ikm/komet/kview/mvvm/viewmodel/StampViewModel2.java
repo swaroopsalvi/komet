@@ -1,5 +1,8 @@
 package dev.ikm.komet.kview.mvvm.viewmodel;
 
+import dev.ikm.komet.framework.observable.ObservableConcept;
+import dev.ikm.komet.framework.observable.ObservableConceptSnapshot;
+import dev.ikm.komet.framework.observable.ObservableEntity;
 import dev.ikm.komet.framework.view.ViewProperties;
 import dev.ikm.komet.kview.events.ClosePropertiesPanelEvent;
 import dev.ikm.komet.kview.mvvm.view.genediting.ConfirmationDialogController;
@@ -10,6 +13,7 @@ import dev.ikm.tinkar.composer.assembler.ConceptAssembler;
 import dev.ikm.tinkar.entity.ConceptEntity;
 import dev.ikm.tinkar.entity.EntityVersion;
 import dev.ikm.tinkar.entity.StampEntity;
+import dev.ikm.tinkar.entity.transaction.Transaction;
 import dev.ikm.tinkar.events.EvtBusFactory;
 import dev.ikm.tinkar.events.Subscriber;
 import dev.ikm.tinkar.terms.ComponentWithNid;
@@ -189,43 +193,30 @@ public class StampViewModel2 extends FormViewModel {
         EntityFacade module = getValue(MODULE);
         EntityFacade path = getValue(PATH);
 
-
-        // -----------  Save stamp on the Database --------------
-
-
-        // ------ ObservableStamp version
-
-//        EntityVersion latestVersion = viewProperties.calculator().latest(entityFacade).get(); // Concept Version
-//        StampEntity stampEntity = latestVersion.stamp();  // Stamp for ConceptVersion.
-//
-//        ObservableStamp observableStamp = ObservableEntity.get(stampEntity.nid()); //ObservableStamp for ConceptVersion.
-//        ObservableStampVersion observableStampVersion = observableStamp.lastVersion(); // Concept STAMP
-//
-//        Transaction transaction = Transaction.make();
-//
-//        StampEntity stampEntity2 = transaction.getStamp(status, stampEntity.authorNid(), module.nid(), path.nid()); // create an uncomitted stamp for records in transaction
-//
-//        observableStampVersion.stateProperty().set(status);
-//        observableStampVersion.timeProperty().set(stampEntity2.time());
-//        observableStampVersion.authorProperty().set(stampEntity.author());
-//        observableStampVersion.moduleProperty().set((ConceptFacade) module);
-//        observableStampVersion.pathProperty().set((ConceptFacade) path);
-//
-//        transaction.commit();
-
-
         // ------- Composer version
 
-        Composer composer = new Composer("Save new STAMP in Concept");
+//        Composer composer = new Composer("Save new STAMP in Concept");
+//
+//        Session session = composer.open(status, TinkarTerm.USER, module.toProxy(), path.toProxy());
+//
+//        session.compose((ConceptAssembler conceptAssembler) -> {
+//            conceptAssembler.concept(entityFacade.toProxy());
+//        });
+//
+//        composer.commitSession(session);
 
-        Session session = composer.open(status, TinkarTerm.USER, module.toProxy(), path.toProxy());
 
-        session.compose((ConceptAssembler conceptAssembler) -> {
-            conceptAssembler.concept(entityFacade.toProxy());
+        ObservableConcept observableConcept = ObservableEntity.get(entityFacade.nid());
+        ObservableConceptSnapshot observableConceptSnapshot = observableConcept.getSnapshot(viewProperties.calculator());
+        observableConceptSnapshot.getLatestVersion().ifPresent(observableConceptVersion -> {
+           observableConceptVersion.stateProperty().set(getValue(STATUS));
+           observableConceptVersion.moduleProperty().set(getValue(MODULE));
+           observableConceptVersion.pathProperty().set(getValue(PATH));
+            Transaction.forVersion(observableConceptVersion).ifPresentOrElse(Transaction::commit, () ->{
+                    throw new RuntimeException("Unable to commit transaction");
+                }
+            );
         });
-
-        composer.commitSession(session);
-
 
         // Load the new STAMP and store the new initial values
         loadStamp();
