@@ -51,7 +51,7 @@ public final class ObservableConceptVersion extends ObservableVersion<ConceptVer
                     }, () -> {
                         Transaction t = Transaction.make();
                         // newStamp already written to the entity store.
-                        StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                        StampEntity<?> newStamp = t.getStampForEntities(newValue, version().authorNid(), version().moduleNid(), version().pathNid(), entity());
                         // Create new version...
                         versionProperty.set(withStampNid(newStamp.nid()));
                     });
@@ -138,7 +138,7 @@ public final class ObservableConceptVersion extends ObservableVersion<ConceptVer
                     }, () -> {
                         Transaction t = Transaction.make();
                         // newStamp already written to the entity store.
-                        StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(), newValue.nid(), version().pathNid(), entity());
+                        StampEntity<?> newStamp = t.getStampForEntities(version().state(), version().authorNid(),version().moduleNid(), newValue.nid(), entity());
                         // Create new version...
                         versionProperty.set(withStampNid(newStamp.nid()));
                     });
