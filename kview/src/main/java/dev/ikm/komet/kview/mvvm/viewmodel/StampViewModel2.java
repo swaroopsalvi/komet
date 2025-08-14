@@ -11,15 +11,13 @@ import dev.ikm.tinkar.composer.Composer;
 import dev.ikm.tinkar.composer.Session;
 import dev.ikm.tinkar.composer.assembler.ConceptAssembler;
 import dev.ikm.tinkar.entity.ConceptEntity;
+import dev.ikm.tinkar.entity.EntityService;
 import dev.ikm.tinkar.entity.EntityVersion;
 import dev.ikm.tinkar.entity.StampEntity;
 import dev.ikm.tinkar.entity.transaction.Transaction;
 import dev.ikm.tinkar.events.EvtBusFactory;
 import dev.ikm.tinkar.events.Subscriber;
-import dev.ikm.tinkar.terms.ComponentWithNid;
-import dev.ikm.tinkar.terms.EntityFacade;
-import dev.ikm.tinkar.terms.State;
-import dev.ikm.tinkar.terms.TinkarTerm;
+import dev.ikm.tinkar.terms.*;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import org.carlfx.cognitive.validator.ValidationResult;
@@ -74,9 +72,9 @@ public class StampViewModel2 extends FormViewModel {
     public StampViewModel2() {
         super();
         addProperty(CURRENT_STAMP, (Stamp) null);
-        addProperty(STATUS, State.ACTIVE);
-        addProperty(MODULE, (ComponentWithNid) null);
-        addProperty(PATH, (ComponentWithNid) null);
+        addProperty(STATUS, (ConceptFacade) null);
+        addProperty(MODULE, (ConceptFacade) null);
+        addProperty(PATH, (ConceptFacade) null);
 
         addProperty(IS_STAMP_VALUES_THE_SAME, true);
         addValidator(IS_STAMP_VALUES_THE_SAME, "Validator Property", (ValidationResult vr, ViewModel vm) -> {
@@ -114,11 +112,11 @@ public class StampViewModel2 extends FormViewModel {
         // initialize observable lists
         Set<ConceptEntity> modules = fetchDescendentsOfConcept(viewProperties, TinkarTerm.MODULE.publicId());
         Set<ConceptEntity> paths = fetchDescendentsOfConcept(viewProperties, TinkarTerm.PATH.publicId());
-
+        Set<ConceptEntity> statuses = generateConceptsForState(List.of(State.values()));
         // populate sets which are bound to the combo boxes.
         setPropertyValues(MODULES, modules);
         setPropertyValues(PATHS, paths);
-        setPropertyValues(STATUSES, List.of(State.values()));
+        setPropertyValues(STATUSES, statuses);
 
         loadStamp();
 
@@ -127,6 +125,12 @@ public class StampViewModel2 extends FormViewModel {
         loadStampValuesFromDB(modules, paths); // MODULE
 
         save(true);
+    }
+
+    private Set<ConceptEntity> generateConceptsForState(List<State> states) {
+        Set<ConceptEntity> statuses = new HashSet<>();
+        states.stream().forEach(state -> statuses.add(EntityService.get().getEntityFast(state.nid())));
+        return statuses;
     }
 
     private void onPropertiesPanelClose() {
@@ -146,8 +150,8 @@ public class StampViewModel2 extends FormViewModel {
         // Choose one item from the Sets as the module and path. Items will use .equals(). STATUS property value is an Enum.
         ConceptEntity module = modules.stream().filter( m -> m.nid() == stampEntity.moduleNid()).findFirst().orElse(null);
         ConceptEntity path = paths.stream().filter( m -> m.nid() == stampEntity.pathNid()).findFirst().orElse(null);
-
-        setPropertyValue(STATUS, stampEntity.state());
+        ConceptFacade state = EntityService.get().getEntityFast(stampEntity.stateNid());
+        setPropertyValue(STATUS, state);
         setPropertyValue(MODULE, module);
         setPropertyValue(PATH, path);
     }
@@ -227,5 +231,9 @@ public class StampViewModel2 extends FormViewModel {
 
     public ViewProperties getViewProperties() {
         return viewProperties;
+    }
+
+    public EntityFacade getEntityFacade() {
+        return entityFacade;
     }
 }
