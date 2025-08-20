@@ -15,78 +15,108 @@
  */
 package dev.ikm.komet.kview.mvvm.view.details;
 
-import static dev.ikm.komet.kview.events.ClosePropertiesPanelEvent.*;
-import static dev.ikm.komet.kview.fxutils.IconsHelper.IconType.*;
-import static dev.ikm.komet.kview.fxutils.MenuHelper.*;
+import dev.ikm.komet.framework.Identicon;
+import dev.ikm.komet.framework.events.appevents.RefreshCalculatorCacheEvent;
+import dev.ikm.komet.framework.observable.ObservableEntity;
+import dev.ikm.komet.framework.observable.ObservableField;
+import dev.ikm.komet.framework.observable.ObservableSemantic;
+import dev.ikm.komet.framework.observable.ObservableSemanticSnapshot;
+import dev.ikm.komet.framework.propsheet.KometPropertySheet;
+import dev.ikm.komet.framework.propsheet.SheetItem;
+import dev.ikm.komet.framework.view.ViewMenuModel;
+import dev.ikm.komet.framework.view.ViewProperties;
+import dev.ikm.komet.kview.common.ViewCalculatorUtils;
+import dev.ikm.komet.kview.controls.KLExpandableNodeListControl;
+import dev.ikm.komet.kview.controls.PublicIDControl;
+import dev.ikm.komet.kview.events.*;
+import dev.ikm.komet.kview.events.genediting.GenEditingEvent;
+import dev.ikm.komet.kview.fxutils.IconsHelper;
+import dev.ikm.komet.kview.fxutils.MenuHelper;
+import dev.ikm.komet.kview.fxutils.SlideOutTrayHelper;
+import dev.ikm.komet.kview.mvvm.model.DataModelHelper;
+import dev.ikm.komet.kview.mvvm.model.DescrName;
+import dev.ikm.komet.kview.mvvm.view.journal.VerticallyFilledPane;
+import dev.ikm.komet.kview.mvvm.view.properties.PropertiesController;
+import dev.ikm.komet.kview.mvvm.view.stamp.StampEditController;
+import dev.ikm.komet.kview.mvvm.viewmodel.ConceptViewModel;
+import dev.ikm.komet.kview.mvvm.viewmodel.StampViewModel;
+import dev.ikm.komet.preferences.KometPreferences;
+import dev.ikm.tinkar.common.id.PublicId;
+import dev.ikm.tinkar.coordinate.stamp.calculator.Latest;
+import dev.ikm.tinkar.coordinate.view.calculator.ViewCalculator;
+import dev.ikm.tinkar.coordinate.view.calculator.ViewCalculatorWithCache;
+import dev.ikm.tinkar.entity.*;
+import dev.ikm.tinkar.events.AxiomChangeEvent;
+import dev.ikm.tinkar.events.EvtBus;
+import dev.ikm.tinkar.events.EvtBusFactory;
+import dev.ikm.tinkar.events.Subscriber;
+import dev.ikm.tinkar.terms.EntityFacade;
+import dev.ikm.tinkar.terms.EntityProxy;
+import dev.ikm.tinkar.terms.State;
+import dev.ikm.tinkar.terms.TinkarTerm;
+import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.geometry.Point2D;
+import javafx.geometry.Side;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.*;
+import javafx.scene.shape.SVGPath;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import org.carlfx.cognitive.loader.*;
+import org.carlfx.cognitive.viewmodel.ValidationViewModel;
+import org.carlfx.cognitive.viewmodel.ViewModel;
+import org.controlsfx.control.PopOver;
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static dev.ikm.komet.kview.events.ClosePropertiesPanelEvent.CLOSE_PROPERTIES;
+import static dev.ikm.komet.kview.fxutils.IconsHelper.IconType.ATTACHMENT;
+import static dev.ikm.komet.kview.fxutils.IconsHelper.IconType.COMMENTS;
+import static dev.ikm.komet.kview.fxutils.MenuHelper.fireContextMenuEvent;
 import static dev.ikm.komet.kview.fxutils.SlideOutTrayHelper.*;
-import static dev.ikm.komet.kview.fxutils.ViewportHelper.*;
-import static dev.ikm.komet.kview.fxutils.window.DraggableSupport.*;
-import static dev.ikm.komet.kview.klfields.KlFieldHelper.*;
+import static dev.ikm.komet.kview.fxutils.ViewportHelper.clipChildren;
+import static dev.ikm.komet.kview.fxutils.window.DraggableSupport.addDraggableNodes;
+import static dev.ikm.komet.kview.fxutils.window.DraggableSupport.removeDraggableNodes;
+import static dev.ikm.komet.kview.klfields.KlFieldHelper.retrieveCommittedLatestVersion;
 import static dev.ikm.komet.kview.mvvm.model.DataModelHelper.*;
 import static dev.ikm.komet.kview.mvvm.viewmodel.ConceptViewModel.*;
-import static dev.ikm.komet.kview.mvvm.viewmodel.ConceptViewModel.CREATE;
-import static dev.ikm.komet.kview.mvvm.viewmodel.ConceptViewModel.CURRENT_JOURNAL_WINDOW_TOPIC;
-import static dev.ikm.komet.kview.mvvm.viewmodel.ConceptViewModel.EDIT;
 import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.MODE;
-import static dev.ikm.komet.kview.mvvm.viewmodel.StampViewModel.*;
-import static dev.ikm.tinkar.common.service.PrimitiveData.*;
-import static dev.ikm.tinkar.common.util.time.DateTimeUtil.*;
+import static dev.ikm.komet.kview.mvvm.viewmodel.StampViewModel.MODULES_PROPERTY;
+import static dev.ikm.komet.kview.mvvm.viewmodel.StampViewModel.PATHS_PROPERTY;
+import static dev.ikm.tinkar.common.service.PrimitiveData.PREMUNDANE_TIME;
+import static dev.ikm.tinkar.common.util.time.DateTimeUtil.PREMUNDANE;
 import static dev.ikm.tinkar.coordinate.stamp.StampFields.*;
 import static dev.ikm.tinkar.coordinate.stamp.StampFields.MODULE;
 import static dev.ikm.tinkar.coordinate.stamp.StampFields.PATH;
-import static dev.ikm.tinkar.events.FrameworkTopics.*;
+import static dev.ikm.tinkar.events.FrameworkTopics.CALCULATOR_CACHE_TOPIC;
+import static dev.ikm.tinkar.events.FrameworkTopics.RULES_TOPIC;
 import static dev.ikm.tinkar.terms.TinkarTerm.*;
-import dev.ikm.komet.framework.*;
-import dev.ikm.komet.framework.events.appevents.*;
-import dev.ikm.komet.framework.observable.*;
-import dev.ikm.komet.framework.propsheet.*;
-import dev.ikm.komet.framework.view.*;
-import dev.ikm.komet.kview.controls.*;
-import dev.ikm.komet.kview.events.*;
-import dev.ikm.komet.kview.events.genediting.*;
-import dev.ikm.komet.kview.fxutils.*;
-import dev.ikm.komet.kview.mvvm.model.*;
-import dev.ikm.komet.kview.common.ViewCalculatorUtils;
-import dev.ikm.komet.kview.mvvm.view.journal.*;
-import dev.ikm.komet.kview.mvvm.view.properties.*;
-import dev.ikm.komet.kview.mvvm.view.stamp.*;
-import dev.ikm.komet.kview.mvvm.viewmodel.*;
-import dev.ikm.komet.preferences.*;
-import dev.ikm.tinkar.common.id.*;
-import dev.ikm.tinkar.coordinate.stamp.calculator.*;
-import dev.ikm.tinkar.coordinate.view.calculator.*;
-import dev.ikm.tinkar.entity.*;
-import dev.ikm.tinkar.entity.FieldDefinitionRecord;
-import dev.ikm.tinkar.events.*;
-import dev.ikm.tinkar.terms.*;
-import javafx.application.*;
-import javafx.beans.*;
-import javafx.beans.Observable;
-import javafx.beans.property.*;
-import javafx.collections.*;
-import javafx.css.*;
-import javafx.event.*;
-import javafx.fxml.*;
-import javafx.geometry.*;
-import javafx.scene.Node;
-import javafx.scene.control.*;
-import javafx.scene.image.*;
-import javafx.scene.input.*;
-import javafx.scene.layout.*;
-import javafx.scene.shape.*;
-import javafx.scene.text.*;
-import org.carlfx.cognitive.loader.*;
-import org.carlfx.cognitive.viewmodel.*;
-import org.controlsfx.control.*;
-import org.eclipse.collections.api.factory.*;
-import org.eclipse.collections.api.list.*;
-import org.slf4j.*;
-
-import java.time.*;
-import java.time.format.*;
-import java.util.*;
-import java.util.function.*;
-import java.util.stream.*;
 
 public class DetailsController  {
 
@@ -1253,11 +1283,16 @@ public class DetailsController  {
                     //              This will always return the latest record from the database not the
                     //              latest from the view coordinate position data time range.
                     ObservableSemantic observableSemantic = ObservableEntity.get(semanticEntity.nid());
+                    System.out.println(" 1111 " + observableSemantic.description());
                     ObservableSemanticSnapshot observableSemanticSnapshot = observableSemantic.getSnapshot(viewCalculator);
-                    Latest<SemanticEntityVersion>  semanticVersion =  retrieveCommittedLatestVersion(observableSemanticSnapshot);
+                    Latest<SemanticEntityVersion>  semanticEntityVersionLatest =  retrieveCommittedLatestVersion(observableSemanticSnapshot);
+
+                    if (semanticEntityVersionLatest.isAbsent()) {
+                        return false;
+                    }
 
                     // Filter (include) semantics where they contain descr type having FQN, Regular name, Definition Descr.
-                    EntityFacade descriptionTypeConceptValue = getFieldValueByMeaning(semanticVersion.get(), TinkarTerm.DESCRIPTION_TYPE);
+                    EntityFacade descriptionTypeConceptValue = getFieldValueByMeaning(semanticEntityVersionLatest.get(), DESCRIPTION_TYPE);
                     if(descriptionTypeConceptValue instanceof EntityFacade descriptionTypeConcept ){
                         int typeId = descriptionTypeConcept.nid();
                         return (typeId == FULLY_QUALIFIED_NAME_DESCRIPTION_TYPE.nid() ||
@@ -1276,7 +1311,11 @@ public class DetailsController  {
 
                     ObservableSemantic observableSemantic = ObservableEntity.get(semanticEntity.nid());
                     ObservableSemanticSnapshot observableSemanticSnapshot = observableSemantic.getSnapshot(viewCalculator);
-                    Latest<SemanticEntityVersion>  semanticVersion =  retrieveCommittedLatestVersion(observableSemanticSnapshot);
+                    Latest<SemanticEntityVersion>  semanticEntityVersionLatest =  retrieveCommittedLatestVersion(observableSemanticSnapshot);
+
+                    if (semanticEntityVersionLatest.isAbsent()) {
+                        return;
+                    }
 
                     PatternEntity<PatternEntityVersion> patternEntity = semanticEntity.pattern();
                     PatternEntityVersion patternEntityVersion = viewCalculator.latest(patternEntity).get();
@@ -1285,9 +1324,9 @@ public class DetailsController  {
                     int indexLang = patternEntityVersion.indexForMeaning(LANGUAGE_CONCEPT_NID_FOR_DESCRIPTION);
 
                     List<String> descrFields = new ArrayList<>();
-                    descriptionSemanticsMap.put(semanticVersion.get(), descrFields);
-                    Object caseSigConcept = semanticVersion.get().fieldValues().get(indexCaseSig);
-                    Object langConcept = semanticVersion.get().fieldValues().get(indexLang);
+                    descriptionSemanticsMap.put(semanticEntityVersionLatest.get(), descrFields);
+                    Object caseSigConcept = semanticEntityVersionLatest.get().fieldValues().get(indexCaseSig);
+                    Object langConcept = semanticEntityVersionLatest.get().fieldValues().get(indexLang);
 
                     // e.g. FQN - English | Case Sensitive
                     String casSigText = viewCalculator.getRegularDescriptionText(((EntityFacade) caseSigConcept).nid())

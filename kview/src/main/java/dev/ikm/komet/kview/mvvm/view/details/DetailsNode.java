@@ -15,12 +15,6 @@
  */
 package dev.ikm.komet.kview.mvvm.view.details;
 
-import static dev.ikm.komet.framework.activity.ActivityStreamOption.PUBLISH;
-import static dev.ikm.komet.framework.activity.ActivityStreamOption.SYNCHRONIZE;
-import static dev.ikm.komet.kview.fxutils.CssHelper.defaultStyleSheet;
-import static dev.ikm.komet.kview.mvvm.viewmodel.ConceptViewModel.CURRENT_ENTITY;
-import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.CURRENT_JOURNAL_WINDOW_TOPIC;
-import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
 import dev.ikm.komet.framework.ExplorationNodeAbstract;
 import dev.ikm.komet.framework.TopPanelFactory;
 import dev.ikm.komet.framework.controls.EntityLabelWithDragAndDrop;
@@ -32,7 +26,6 @@ import dev.ikm.tinkar.common.flow.FlowSubscriber;
 import dev.ikm.tinkar.entity.Entity;
 import dev.ikm.tinkar.terms.ConceptFacade;
 import dev.ikm.tinkar.terms.EntityFacade;
-import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXMLLoader;
@@ -48,6 +41,13 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Set;
 import java.util.UUID;
+
+import static dev.ikm.komet.framework.activity.ActivityStreamOption.PUBLISH;
+import static dev.ikm.komet.framework.activity.ActivityStreamOption.SYNCHRONIZE;
+import static dev.ikm.komet.kview.fxutils.CssHelper.defaultStyleSheet;
+import static dev.ikm.komet.kview.mvvm.viewmodel.ConceptViewModel.CURRENT_ENTITY;
+import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.CURRENT_JOURNAL_WINDOW_TOPIC;
+import static dev.ikm.komet.kview.mvvm.viewmodel.FormViewModel.VIEW_PROPERTIES;
 
 public class DetailsNode extends ExplorationNodeAbstract {
     private static final Logger LOG = LoggerFactory.getLogger(DetailsNode.class);
@@ -226,8 +226,10 @@ public class DetailsNode extends ExplorationNodeAbstract {
         this.invalidationSubscriber = new FlowSubscriber<>(nid -> {
             if (entityFocusProperty.get() != null && entityFocusProperty.get().nid() == nid) {
                 // component has changed, need to update.
-                Platform.runLater(() -> entityFocusProperty.set(null));
-                Platform.runLater(() -> entityFocusProperty.set(Entity.provider().getEntityFast(nid)));
+                entityFocusProperty.set(null);
+                entityFocusProperty.set(Entity.provider().getEntityFast(nid));
+//                Platform.runLater(() -> entityFocusProperty.set(null));
+//                Platform.runLater(() -> entityFocusProperty.set(Entity.provider().getEntityFast(nid)));
             }
         });
 
