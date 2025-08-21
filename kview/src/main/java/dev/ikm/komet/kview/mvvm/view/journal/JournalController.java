@@ -309,7 +309,7 @@ public class JournalController {
     @InjectViewModel
     private JournalViewModel journalViewModel;
 
-    private ObservableViewNoOverride windowView;
+  //  private ObservableViewNoOverride windowView;
 
     /**
      * Called after JavaFX FXML DI has occurred. Any annotated items above should be valid.
@@ -322,7 +322,7 @@ public class JournalController {
         WindowSettings windowSettings = journalViewModel.getPropertyValue(WINDOW_SETTINGS);
 
         // Initialize the journal window view, which is provided in the WindowSettings
-        windowView = windowSettings.getView();
+      //  windowView = windowSettings.getView();
 
         // Initialize the journal windows list
         journalWindows = FXCollections.unmodifiableObservableList(workspace.getWindows());
@@ -362,10 +362,10 @@ public class JournalController {
                 createConceptWindow(conceptFacade, NID_TEXT, null);
             } else if (entityFacade instanceof PatternFacade patternFacade) {
                 // TODO is this used??  The makePatternWindowEventSubscriber below is handling the event to create the Pattern Window
-                createPatternWindow(patternFacade, windowView.makeOverridableViewProperties("JournalController.makeComponentWindowEventSubscriber.PatternFacade"));
+                createPatternWindow(patternFacade, windowSettings.getView().makeOverridableViewProperties("JournalController.makeComponentWindowEventSubscriber.PatternFacade"));
             } else if (entityFacade instanceof SemanticFacade semanticFacade) {
                 // TODO is this used??  The makeGenEditWindowEventSubscriber below is handling the event to create the Semantic (GenEdit) Window
-                createGenEditWindow(semanticFacade, windowView.makeOverridableViewProperties("JournalController.makeComponentWindowEventSubscriber.SemanticFacade"), false);
+                createGenEditWindow(semanticFacade, windowSettings.getView().makeOverridableViewProperties("JournalController.makeComponentWindowEventSubscriber.SemanticFacade"), false);
             }
         };
         journalEventBus.subscribe(journalTopic, MakeConceptWindowEvent.class, makeComponentWindowEventSubscriber);
@@ -430,9 +430,9 @@ public class JournalController {
         this.nodePreferences = nodePreferences;
         this.windowSettings = journalViewModel.getPropertyValue(WINDOW_SETTINGS);
 
-        ViewCalculatorWithCache viewCalculator = ViewCalculatorWithCache.getCalculator(windowView.toViewCoordinateRecord());
+        ViewCalculatorWithCache viewCalculator = ViewCalculatorWithCache.getCalculator(windowSettings.getView().toViewCoordinateRecord());
 
-        TinkExecutor.threadPool().execute(TaskWrapper.make(new ViewMenuTask(viewCalculator, windowView, "JournalController"),
+        TinkExecutor.threadPool().execute(TaskWrapper.make(new ViewMenuTask(viewCalculator, windowSettings.getView(), "JournalController"),
                 (List<MenuItem> result) -> {
                     FXUtils.runOnFxThread(() -> windowCoordinates.getItems().addAll(result));
                 }));
@@ -625,7 +625,7 @@ public class JournalController {
      */
     public void createWindowFromUuids(UUID[] uuids) {
         createAndSetupWindow(() -> createFromUuids(uuids, journalTopic,
-                        windowView.makeOverridableViewProperties("JournalController.createWindowFromUuids"), null),
+                        windowSettings.getView().makeOverridableViewProperties("JournalController.createWindowFromUuids"), null),
                 "UUID array: " + ArrayIterate.makeString(uuids));
     }
 
@@ -640,7 +640,7 @@ public class JournalController {
         if (entityFacade == null) return;
 
         createAndSetupWindow(() -> createFromEntity(entityFacade, journalTopic,
-                        windowView.makeOverridableViewProperties("JournalController.createWindowFromEntity"), null),
+                        windowSettings.getView().makeOverridableViewProperties("JournalController.createWindowFromEntity"), null),
                 "entity " + entityFacade.nid());
     }
 
@@ -876,16 +876,16 @@ public class JournalController {
         navigatorActivityStream = ActivityStreams.create(navigationActivityStreamKey);
         activityStreams.add(navigationActivityStreamKey);
 
-        loadNavigationPanel(this.windowView);
-        loadClassicConceptNavigatorPanel(navigationActivityStreamKey, this.windowView, navigationFactory);
+        loadNavigationPanel(this.windowSettings.getView());
+        loadClassicConceptNavigatorPanel(navigationActivityStreamKey, this.windowSettings.getView(), navigationFactory);
 
         String uniqueSearchTopic = "search-%s".formatted(journalName);
         UUID uuidSearch = UuidT5Generator.get(uniqueSearchTopic);
         final PublicIdStringKey<ActivityStream> searchActivityStreamKey = new PublicIdStringKey(PublicIds.of(uuidSearch.toString()), uniqueSearchTopic);
         searchActivityStream = ActivityStreams.create(searchActivityStreamKey);
 
-        loadSearchPanel(searchActivityStreamKey, windowView, searchFactory);
-        loadReasonerPanel(ActivityStreams.REASONER, windowView);
+        loadSearchPanel(searchActivityStreamKey, windowSettings.getView(), searchFactory);
+        loadReasonerPanel(ActivityStreams.REASONER, windowSettings.getView());
 
 
         isSlideOutOpen = false;
@@ -902,7 +902,7 @@ public class JournalController {
         Config nextGenSearchConfig = new Config(NextGenSearchController.class.getResource(NEXT_GEN_SEARCH_FXML_URL))
                 .updateViewModel("nextGenSearchViewModel", (nextGenSearchViewModel) ->
                             nextGenSearchViewModel.setPropertyValue(MODE, CREATE)
-                                .setPropertyValue(VIEW_PROPERTIES, this.windowView.makeOverridableViewProperties("JournalController.loadNextGenSearchPanel"))
+                                .setPropertyValue(VIEW_PROPERTIES, this.windowSettings.getView().makeOverridableViewProperties("JournalController.loadNextGenSearchPanel"))
                                 .setPropertyValue(CURRENT_JOURNAL_WINDOW_TOPIC, journalTopic)
                 );
 
@@ -1046,7 +1046,7 @@ public class JournalController {
             preferences.put(ENTITY_NID_TYPE, nidTextEnum.name());
         }
 
-        ViewProperties viewProperties = windowView.makeOverridableViewProperties("JournalController.createConceptWindow");
+        ViewProperties viewProperties = windowSettings.getView().makeOverridableViewProperties("JournalController.createConceptWindow");
 
         AbstractEntityChapterKlWindow chapterKlWindow = createWindow(EntityKlWindowTypes.CONCEPT,
                 journalTopic, conceptFacade, viewProperties, preferences);
@@ -1571,7 +1571,7 @@ public class JournalController {
      */
     @FXML
     public void newCreateLidrWindow(ActionEvent actionEvent) {
-        createLidrWindow(windowView, null);
+        createLidrWindow(windowSettings.getView(), null);
     }
 
     /**
@@ -1585,7 +1585,7 @@ public class JournalController {
      */
     @FXML
     public void newCreatePatternWindow(ActionEvent actionEvent) {
-        createPatternWindow(null, windowView.makeOverridableViewProperties("JournalController.newCreatePatternWindow"));
+        createPatternWindow(null, windowSettings.getView().makeOverridableViewProperties("JournalController.newCreatePatternWindow"));
     }
 
     public static Toast toast() { return toast; }
