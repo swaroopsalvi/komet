@@ -23,7 +23,7 @@ import dev.ikm.komet.kview.events.ClosePropertiesPanelEvent;
 import dev.ikm.komet.kview.mvvm.view.genediting.ConfirmationDialogController;
 import dev.ikm.tinkar.component.Stamp;
 import dev.ikm.tinkar.entity.ConceptEntity;
-import dev.ikm.tinkar.entity.EntityService;
+import dev.ikm.tinkar.entity.EntityVersion;
 import dev.ikm.tinkar.entity.StampEntity;
 import dev.ikm.tinkar.entity.transaction.Transaction;
 import dev.ikm.tinkar.events.EntityVersionChangeEvent;
@@ -170,7 +170,10 @@ public class StampFormViewModel extends FormViewModel {
     }
 
     private void loadStamp() {
-        StampEntity stampEntity = EntityService.get().getEntityFast(entityFacade.nid()).versions().getLastOptional().get().stamp();
+    //    StampEntity stampEntity = EntityService.get().getEntityFast(entityFacade.nid()).versions().getLastOptional().get().stamp();
+
+        EntityVersion latestVersion = viewProperties.calculator().latest(entityFacade).get();
+        StampEntity stampEntity = latestVersion.stamp();
         setPropertyValue(CURRENT_STAMP, stampEntity);
     }
 
@@ -269,8 +272,7 @@ public class StampFormViewModel extends FormViewModel {
                 observableVersion.versionProperty().set(observableVersion.updateStampNid(stampEntity.nid()));
             }
         });
-        int stampCount = transaction.commit();
-        System.out.println(" TOTAL STAMPS UPDATED " + stampCount);
+        transaction.commit();
 
        // Load the new STAMP and store the new initial values
         loadStamp();

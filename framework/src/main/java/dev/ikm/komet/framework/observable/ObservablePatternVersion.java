@@ -265,4 +265,13 @@ public final class ObservablePatternVersion
         return fieldMap.toImmutable();
     }
 
+    @Override
+    public PatternVersionRecord updateStampNid(int stampNid) {
+        PatternVersionRecord patternVersionRecord = null;
+        PatternVersionRecord conceptVersionRecord = version();
+        patternVersionRecord = conceptVersionRecord.with().stampNid(stampNid).build();
+
+        return patternVersionRecord;
+    }
+
 }
