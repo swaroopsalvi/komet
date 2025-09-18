@@ -1,15 +1,5 @@
 package dev.ikm.komet.kview.mvvm.viewmodel.stamp;
 
-import dev.ikm.komet.framework.controls.TimeUtils;
-import dev.ikm.komet.framework.view.ViewProperties;
-import dev.ikm.tinkar.component.Stamp;
-import dev.ikm.tinkar.entity.EntityVersion;
-import dev.ikm.tinkar.entity.StampEntity;
-import dev.ikm.tinkar.terms.ConceptFacade;
-import dev.ikm.tinkar.terms.EntityFacade;
-
-import java.util.UUID;
-
 import static dev.ikm.komet.kview.mvvm.viewmodel.stamp.StampFormViewModelBase.Properties.AUTHOR;
 import static dev.ikm.komet.kview.mvvm.viewmodel.stamp.StampFormViewModelBase.Properties.CLEAR_RESET_BUTTON_TEXT;
 import static dev.ikm.komet.kview.mvvm.viewmodel.stamp.StampFormViewModelBase.Properties.CURRENT_STAMP;
@@ -20,6 +10,21 @@ import static dev.ikm.komet.kview.mvvm.viewmodel.stamp.StampFormViewModelBase.Pr
 import static dev.ikm.komet.kview.mvvm.viewmodel.stamp.StampFormViewModelBase.Properties.PATH;
 import static dev.ikm.komet.kview.mvvm.viewmodel.stamp.StampFormViewModelBase.Properties.STATUS;
 import static dev.ikm.komet.kview.mvvm.viewmodel.stamp.StampFormViewModelBase.Properties.TIME;
+import dev.ikm.komet.framework.controls.TimeUtils;
+import dev.ikm.komet.framework.observable.ObservableField;
+import dev.ikm.komet.framework.observable.ObservableStamp;
+import dev.ikm.komet.framework.observable.ObservableStampVersion;
+import dev.ikm.komet.framework.view.ViewProperties;
+import dev.ikm.tinkar.component.Stamp;
+import dev.ikm.tinkar.entity.EntityVersion;
+import dev.ikm.tinkar.entity.StampEntity;
+import dev.ikm.tinkar.entity.StampEntityVersion;
+import dev.ikm.tinkar.terms.ConceptFacade;
+import dev.ikm.tinkar.terms.EntityFacade;
+import org.eclipse.collections.api.list.ImmutableList;
+
+import java.util.Optional;
+import java.util.UUID;
 
 public abstract class StampAddFormViewModelBase extends StampFormViewModelBase {
 
@@ -68,12 +73,48 @@ public abstract class StampAddFormViewModelBase extends StampFormViewModelBase {
 
     protected void loadStampValuesFromDB() {
         StampEntity stampEntity = getPropertyValue(Properties.CURRENT_STAMP);
+        ObservableStamp observableStamp = ObservableStamp.get(stampEntity.nid());
+        ObservableStampVersion observableStampVersion = observableStamp.lastVersion();
+        ImmutableList<ObservableField> stampFields = observableStampVersion.fields();
 
-        setPropertyValue(STATUS, stampEntity.state());
-        setPropertyValue(TIME, stampEntity.time());
-        setPropertyValue(AUTHOR, stampEntity.author());
-        setPropertyValue(MODULE, stampEntity.module());
-        setPropertyValue(PATH, stampEntity.path());
+        Optional<StampEntityVersion> stampEntityVersionOptional = latestCommitedVersionStamp(stampEntity);
+
+        stampEntityVersionOptional.ifPresentOrElse(stampEntityVersion -> {
+            setPropertyValue(STATUS, stampEntityVersion.state());
+            setPropertyValue(TIME, stampEntityVersion.time());
+            setPropertyValue(AUTHOR, stampEntityVersion.author());
+            setPropertyValue(MODULE, stampEntityVersion.module());
+            setPropertyValue(PATH, stampEntityVersion.path());
+        }, () -> {
+            setPropertyValue(STATUS, null);
+            setPropertyValue(TIME, null);
+            setPropertyValue(AUTHOR, null);
+            setPropertyValue(MODULE, null);
+            setPropertyValue(PATH, null);
+        });
+
+    }
+
+    private Optional<StampEntityVersion> latestCommitedVersionStamp(StampEntity stampEntity) {
+        if (stampEntity.versions().size() == 1 && ((StampEntityVersion) stampEntity.versions().get(0)).time() != Long.MAX_VALUE) {
+            return Optional.of((StampEntityVersion)stampEntity.versions().get(0));
+        } else {
+            StampEntityVersion latest = null;
+            for(StampEntityVersion version :  (ImmutableList<StampEntityVersion>) stampEntity.versions()) {
+                if (version.time() == Long.MIN_VALUE) {
+                    return Optional.of(version);
+                }
+                if (latest == null) {
+                    latest = version;
+                } else if (version.time() != Long.MAX_VALUE && latest.time() < version.time()) {
+                    latest = version;
+                }
+            }
+            if(latest.time() == Long.MAX_VALUE){
+                return Optional.empty();
+            }
+            return Optional.of(latest);
+        }
     }
 
     @Override

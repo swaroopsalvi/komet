@@ -1,15 +1,12 @@
 package dev.ikm.komet.kview.controls.skin;
 
 import dev.ikm.komet.kview.controls.StampViewControl;
-import javafx.event.EventHandler;
-import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.control.SkinBase;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.scene.Node;
 
 public class StampViewControlSkin extends SkinBase<StampViewControl> {
     private final VBox root;
@@ -35,7 +32,7 @@ public class StampViewControlSkin extends SkinBase<StampViewControl> {
 
         statusLabel = new Label();
         statusLabel.getStyleClass().add("stamp-label");
-        statusLabel.textProperty().bind(control.statusProperty());
+        statusLabel.textProperty().bindBidirectional(control.statusProperty());
 
         HBox statusBox = new HBox(statusText, statusLabel);
 
@@ -45,7 +42,7 @@ public class StampViewControlSkin extends SkinBase<StampViewControl> {
 
         lastUpdatedLabel = new Label();
         lastUpdatedLabel.getStyleClass().add("stamp-label");
-        lastUpdatedLabel.textProperty().bind(control.lastUpdatedProperty());
+        lastUpdatedLabel.textProperty().bindBidirectional(control.lastUpdatedProperty());
 
         HBox lastUpdatedBox = new HBox(lastUpdatedText, lastUpdatedLabel);
 
@@ -55,7 +52,7 @@ public class StampViewControlSkin extends SkinBase<StampViewControl> {
 
         authorLabel = new Label();
         authorLabel.getStyleClass().add("stamp-label");
-        authorLabel.textProperty().bind(control.authorProperty());
+        authorLabel.textProperty().bindBidirectional(control.authorProperty());
 
         HBox authorBox = new HBox(authorText, authorLabel);
 
@@ -65,7 +62,7 @@ public class StampViewControlSkin extends SkinBase<StampViewControl> {
 
         moduleLabel = new Label();
         moduleLabel.getStyleClass().add("stamp-label");
-        moduleLabel.textProperty().bind(control.moduleProperty());
+        moduleLabel.textProperty().bindBidirectional(control.moduleProperty());
 
         HBox moduleBox = new HBox(moduleText, moduleLabel);
 
@@ -75,7 +72,7 @@ public class StampViewControlSkin extends SkinBase<StampViewControl> {
 
         pathLabel = new Label();
         pathLabel.getStyleClass().add("stamp-label");
-        pathLabel.textProperty().bind(control.pathProperty());
+        pathLabel.textProperty().bindBidirectional(control.pathProperty());
 
         HBox pathBox = new HBox(pathText, pathLabel);
 
